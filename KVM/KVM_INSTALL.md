@@ -4,6 +4,7 @@
 <!-- TOC -->
 - [检测是否支持KVM](#检测是否支持kvm)
 - [安装 KVM 环境](#安装-kvm-环境)
+- [配置KVM网络](#配置KVM网络)
 <!-- /TOC -->
 
 ## 检测是否支持KVM
@@ -25,23 +26,23 @@ sed -i "s|=enforcing|=disabled|g" /etc/sysconfig/selinux
 
 通过 [yum](https://jaywcjlove.github.io/linux-command/c/yum.html) 安装 kvm 基础包和管理工具
 
-kvm相关安装包及其作用: 
-- `qemu-kvm` 主要的KVM程序包  
-- `python-virtinst` 创建虚拟机所需要的命令行工具和程序库  
-- `virt-manager` GUI虚拟机管理工具  
-- `virt-top` 虚拟机统计命令  
-- `virt-viewer` GUI连接程序，连接到已配置好的虚拟机  
-- `libvirt` C语言工具包，提供libvirt服务  
-- `libvirt-client` 为虚拟客户机提供的C语言工具包  
-- `virt-install` 基于libvirt服务的虚拟机创建命令  
-- `bridge-utils` 创建和管理桥接设备的工具  
+kvm相关安装包及其作用:
+- `qemu-kvm` 主要的KVM程序包
+- `python-virtinst` 创建虚拟机所需要的命令行工具和程序库
+- `virt-manager` GUI虚拟机管理工具
+- `virt-top` 虚拟机统计命令
+- `virt-viewer` GUI连接程序，连接到已配置好的虚拟机
+- `libvirt` C语言工具包，提供libvirt服务
+- `libvirt-client` 为虚拟客户机提供的C语言工具包
+- `virt-install` 基于libvirt服务的虚拟机创建命令
+- `bridge-utils` 创建和管理桥接设备的工具
 
 ```bash
-# 安装 kvm 
+# 安装kvm和工具包
 # ------------------------
 # yum -y install qemu-kvm python-virtinst libvirt libvirt-python virt-manager libguestfs-tools bridge-utils virt-install
 
-yum -y install qemu-kvm libvirt virt-install bridge-utils 
+yum -y install qemu-kvm libvirt virt-install bridge-utils
 
 # 重启宿主机，以便加载 kvm 模块
 # ------------------------
@@ -76,26 +77,48 @@ systemctl is-enabled libvirtd
            http://libvirt.org
 ```
 
-#配置KVM网络
-kvm虚拟化环境安装好后，ifconfig会发现多了一个虚拟网卡virbr0。这是由于安装和启用了libvirt服务后生成的，libvirt在服务器（host）上生成一个 virtual network switch (virbr0)，host上所有的虚拟机（guests）通过这个 virbr0 连起来。默认情况下 virbr0 使用的是 NAT 模式（采用 IP Masquerade），所以这种情况下 guest 通过 host 才能访问外部。
+# 配置KVM网络
+- 配置桥接网卡，[官方教程](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/networking_guide/ch-configure_network_bridging)
+
+```bash
+nmtui
+systemctl restart network
+
+#检查配置是否生效
+ip addr show
+
+
+brctl show
+
+bridge name	bridge id		STP enabled	interfaces
+br0		8000.92d7de4eea27	yes		em1
+
+```
+
+- kvm虚拟化环境安装好后，ifconfig会发现多了一个虚拟网卡virbr0。这是由于安装和启用了libvirt服务后生成的，libvirt在服务器（host）上生成一个 virtual network switch (virbr0)，host上所有的虚拟机（guests）通过这个 virbr0 连起来。默认情况下 virbr0 使用的是 NAT 模式（采用 IP Masquerade），所以这种情况下 guest 通过 host 才能访问外部。
+
 ```bash
 #使用brctl检查桥接网卡
 brctl show
+
 #virsh检查网络配置
 virsh net-list
 
  Name                 State      Autostart     Persistent
 ----------------------------------------------------------
  default              active     yes           yes
-#net-destroy 
+
+#关闭virbr0网卡
+#net-destroy
 virsh net-destroy default
 
-Network default destroyed
 #net-undefine
 virsh net-undefine default
 
+#执行virsh net-list显示如下结果，即为成功：
  Name                 State      Autostart     Persistent
 ----------------------------------------------------------
+
 #重启libvirtd让设置生效
 systemctl restart libvirtd
 ```
