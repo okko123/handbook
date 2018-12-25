@@ -1,0 +1,12 @@
+## EC2
+- 查看所有EC2实例使用的IAM角色
+    aws ec2 describe-iam-instance-profile-associations
+- 替换EC2实例使用的IAM角色
+    aws ec2 replace-iam-instance-profile-association
+
+## Cloudwatch
+- 设置告警的状态为ALARM
+    aws cloudwatch set-alarm-state --state-value ALARM --alarm-name CPU-ALARM --state-reason "Test Alarm"
+
+## 参考资料
+- [AWS Cli ec2手册](https://docs.aws.amazon.com/cli/latest/reference/ec2/)
