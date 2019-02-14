@@ -8,3 +8,6 @@
 
 # S3对象存储服务
 - 需要为S3桶添加桶策略。默认的下，S3不允许其他应用写入。需要修改桶策略
+
+# cloudfront
+- 使用cloudfront访问S3桶资源的时候，需要在cloudfront的源配置中修改，Restrict Bucket Access (限制存储桶访问) ，然后再更新桶策略。[参考连接](https://docs.aws.amazon.com/zh_cn/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html)
