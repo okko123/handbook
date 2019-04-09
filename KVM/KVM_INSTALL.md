@@ -5,6 +5,7 @@
 - [检测是否支持KVM](#检测是否支持kvm)
 - [安装 KVM 环境](#安装-kvm-环境)
 - [配置KVM网络](#配置KVM网络)
+- [创建虚拟机](#创建虚拟机)
 <!-- /TOC -->
 
 ## 检测是否支持KVM
@@ -121,4 +122,10 @@ virsh net-undefine default
 
 #重启libvirtd让设置生效
 systemctl restart libvirtd
+```
+
+# 创建虚拟机
+- 使用kickstart模式进行安装系统。重点不是使用--pxe模式引导启动
+```bash
+virt-install --virt-type=kvm --name=REDIS-2 --vcpus=2 --memory=4096 --location=http://192.168.0.106/OS7 --disk path=/data/vms/REDIS-2.qcow2,size=50,format=qcow2 --network bridge=br0 --graphics none --extra-args='console=ttyS0 ks=http://192.168.0.106/KS/ks-vm.cfg' --force
 ```
