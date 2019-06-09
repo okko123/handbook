@@ -9,3 +9,7 @@ https://docs.mongodb.com/v3.4/tutorial/enforce-keyfile-access-control-in-existin
 openssl rand -base64 741 > mongodb-keyfile
 chmod 600 mongodb-keyfile
 chown mongod.mongod mongodb-keyfile
+
+
+mongos缓存配置
+https://bbs.huaweicloud.com/blogs/51b45c8ef21a11e8bd5a7ca23e93a891

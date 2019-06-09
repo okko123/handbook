@@ -25,7 +25,10 @@ cat > /etc/dnsmasq.conf <<'EOF'
 port=0
 interface=enp0s3
 bind-interfaces
+#设置最大租约数，默认值为1000
+dhcp-lease-max=150
 dhcp-range=10.10.0.100,10.10.0.150,12h
+#dhcp，mac地址与ip地址静态绑定，[client端mac地址] + [分片IP] + [主机名] + infinite(无限租期)
 dhcp-host=52:54:00:6b:88:a0,10.10.0.50,infinite,svr1
 
 pxe-prompt="Press F8 or Enter key for menu.", 60
@@ -125,3 +128,4 @@ repoorder = ["rawhide", "development", "fedora", "base"]
 - [PXE引导文件配置](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/7/html/installation_guide/chap-installation-server-setup)
 - [DNSMASQ PXE with BIOS and UEFI 1](https://serverfault.com/questions/829068/trouble-with-dnsmasq-dhcp-proxy-pxe-for-uefi-clients)
 - [DNSMASQ PXE with BIOS and UEFI 2](https://wiki.fogproject.org/wiki/index.php?title=ProxyDHCP_with_dnsmasq#Install_dnsmasq_on_CentOS_7)
+- [DNSMASQ manpage](http://www.thekelleys.org.uk/dnsmasq/docs/dnsmasq-man.html)

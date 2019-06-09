@@ -13,3 +13,9 @@
 # cloudfront
 - 使用cloudfront访问S3桶资源的时候，需要在cloudfront的源配置中修改，Restrict Bucket Access (限制存储桶访问) ，然后再更新桶策略。[参考连接](https://docs.aws.amazon.com/zh_cn/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html)
              
+# RDS
+- 启用GTID进行主从同步的步骤[参考连接](https://aws.amazon.com/cn/blogs/database/amazon-aurora-for-mysql-compatibility-now-supports-global-transaction-identifiers-gtids-replication/)
+  - Create an Aurora MySQL 2.04 cluster or upgrade an existing Aurora DB cluster by modifying the Aurora DB cluster. 
+  - Create a custom cluster parameter group and configure gtid-mode and enforce_gtid_consistency;reboot cluster
+   - On Aurora MySQL. mysql> CALL mysql.rds_set_external_master_with_auto_position ('External MySQL Host_Name',3306,'repl_user','password',0);
+   - Start replication. mysql> CALL mysql.rds_start_replication ();
