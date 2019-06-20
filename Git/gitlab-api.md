@@ -17,7 +17,7 @@ curl --header "PRIVATE-TOKEN: EeVPPydkxJuxhaabbbgb1" https://www.gitlab.com/api/
 curl --head --header "PRIVATE-TOKEN: EeVPPydkxJuxhaabbbgb1" 'https://www.gitlab.com/api/v4/projects'
 
 #Example
-curl --header "PRIVATE-TOKEN: EeVPPydkxJuxhaabbbgb1" 'https://www.gitlab.com/api/v4/projects?simple=ture&sort=desc&page=1&per_page=20'
+curl --header "PRIVATE-TOKEN: EeVPPydkxJuxhaabbbgb1" 'https://www.gitlab.com/api/v4/projects?sample=ture&sort=desc&page=1&per_page=20'
 ```
 
 - 将用户添加到项目中
