@@ -29,16 +29,6 @@ curl -XPOST --header "PRIVATE-TOKEN: EeVPPydkxJuxhaabbbgb1" https://www.gitlab.c
 curl --head --header "PRIVATE-TOKEN: EeVPPydkxJuxhaabbbgb1" 'https://www.gitlab.com/api/v4/deploy_keys'
 ```
 
-- 命令行下删除privilege deploy key
-```bash
-#Starting a Rails console session
-sudo gitlab-rails console
-#获取deploykey id
-DeployKey.all()
-#删除DeployKey
-DeployKey.find_by(id: [deploy_key_id]).destroy
-```
-
 ## gitlab升级路径
 https://docs.gitlab.com/ee/policy/maintenance.html#upgrade-recommendations
 例如本机版本为8.13.4升级到11.3.4，需要安装此路径进行更新：8.13.4 -> 8.17.7 -> 9.5.10 -> 10.8.7 -> 11.3.4
