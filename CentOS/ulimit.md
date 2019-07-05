@@ -5,7 +5,13 @@ cat /proc/pid/limits
 Limit                     Soft Limit           Hard Limit           Units       
 Max open files            1024                 65536                files       
 ```
-## 从搜索引擎查找到答案：/etc/security/limits.conf 是 pam_limits.so 的配置文件，一般只有在“登录”的时候才执行，用于从(login/sshd)+pam_limits.so 的 root 身份降级到普通用户之前，设置好 rlimits。而从/etc/rc.local启动应用，根本就没有登录这个动作。导致引用启动使用默认的限制
+## 从搜索引擎查找到答案：/etc/security/limits.conf 是 pam_limits.so 的配置文件，一般只有在“登录”的时候才执行，用于从(login/sshd)+pam_limits.so 的 root 身份降级到普通用户之前，设置好 rlimits。而从/etc/rc.local启动应用，根本就没有登录这个动作。导致引用启动使用默认的限制。解决建议修改/etc/initscript文件，在/etc/initscript中添加
+```bash
+cat >> /etc/initscript<<EOF
+ulimit -SHn 65536
+ulimit -SHu 65536
+EOF
+```
 
 # 补充知识
 ## ulimit -n控制进程级别能够打开的文件句柄的数量, 而max-file表示系统级别的能够打开的文件句柄的数量。file-nr中的三个值表示已分配文件句柄的数量，已分配但未使用的文件句柄的数量以及最大文件句柄数。 Linux 2.6总是报告0作为空闲文件句柄的数量 - 这不是错误，它只是意味着分配的文件句柄数与使用的文件句柄数完全匹配。
@@ -14,5 +20,6 @@ Max open files            1024                 65536                files
 397697
 # cat /proc/sys/fs/file-nr       
 6880	0	397697  
-# lsof | wc -l
 ```
+
+[参考链接1](https://linux.die.net/man/5/initscript)
