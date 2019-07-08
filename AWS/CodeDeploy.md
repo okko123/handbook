@@ -35,5 +35,20 @@ aws deploy create-deployment \
   --s3-location bucket=erc-codedeploydemobucket,bundleType=zip,key=WordPressApp.zip
 ```
 
+## 蓝绿发布
+- 在codedeploy中，由部署组（deployed group）的配置中关联对应EC2实例的tag或Amazon EC2 Auto Scaling组
+- 在使用Auto Scaling的条件下，进行蓝绿发布，期间的过程如下：
+  - codedeploy以原来的AS配置，进行复制。命名规则为CodeDeploy_{部署组的组名}_{部署ID}
+  - 在新的AS组的作用下，创建机器
+  - 机器创建完成后，触发codedeploy进行app的发布
+  - 当codedeploy完成app的发布后，根据配置等待指定时间/立刻，将流量导入到新机器上。此时，新旧app都同时在线上进行服务
+  - 当新机器通过了LB的健康检查后，才将旧实例从LB上摘除
+  - 旧机器会根据配置等待指定时间/立刻，将旧机器进行销毁
+- 回滚，codeploy执行的动作
+  - 点击停止部署并回滚
+  - codedeploy中止本次部署
+  - 新建部署，把所有机器重新挂载回LB上
+  - 当挂载完成后，通过LB的健康检查后，才开始将新实例从LB上摘除
+  - 注意，回滚操作后，codedeploy不会将发布失败的AS组进行删除，需要手动删除
 
   https://docs.aws.amazon.com/zh_cn/codedeploy/latest/userguide/codedeploy-agent-operations-install-linux.html
