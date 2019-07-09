@@ -18,7 +18,7 @@ pip install "elasticsearch>=5.0.0"
 #如果你使用的Elasticsearch 2.X
 pip install "elasticsearch<3.0.0"
 ```
-- 手动生成config.yaml配置文件，配置样板参考仓库中的config.yaml.example文件
+- 手动生成config.yaml配置文件，配置样板参考仓库中的config.yaml.example文件。notify_email:配置接受elastalert异常信息的邮箱地址。
 ```bash
 es_host: vpc-xxxxxx.us-west-1.es.amazonaws.com
 es_port: 443
@@ -31,6 +31,14 @@ use_ssl: True
 writeback_index: elastalert_status
 alert_time_limit:
   days: 2
+notify_email: example@example.com
+smtp_host: smtp.example.com
+smtp_port: 465
+smtp_ssl: true
+smtp_auth_file: "/opt/elastalert/email_auth.yaml"
+email_reply_to: "noreply@example.com"
+from_addr: noreply@example.com
+
   ```
 - 创建索引
 ```bash
