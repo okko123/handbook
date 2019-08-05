@@ -17,7 +17,7 @@ kubectl create namespace ingress-basic
 ```bash
 #创建服务帐户，在已启用 RBAC 的 AKS 群集中部署 Helm 之前，需要 Tiller 服务的服务帐户和角色绑定。
 cat > helm-rbac.yaml <<EOF
- apiVersion: v1
+apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: tiller
