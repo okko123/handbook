@@ -19,3 +19,4 @@
   - Create a custom cluster parameter group and configure gtid-mode and enforce_gtid_consistency;reboot cluster
    - On Aurora MySQL. mysql> CALL mysql.rds_set_external_master_with_auto_position ('External MySQL Host_Name',3306,'repl_user','password',0);
    - Start replication. mysql> CALL mysql.rds_start_replication ();
+- 默认情况下连接数限制，[参考连接](https://docs.aws.amazon.com/zh_cn/AmazonRDS/latest/AuroraUserGuide/AuroraMySQL.Managing.Performance.html)
