@@ -12,6 +12,10 @@ options {
 	dump-file 	"/var/named/data/cache_dump.db";
 	statistics-file "/var/named/data/named_stats.txt";
 	memstatistics-file "/var/named/data/named_mem_stats.txt";
+	max-cache-size 512m;
+	cleaning-interval 1;    // clean cache every 1 minutes
+	max-cache-ttl 30;        // limit cached record to a 60s TTL
+	max-ncache-ttl 30;       // limit cache neg. resp. to a 60s TTL
 	recursing-file  "/var/named/data/named.recursing";
 	secroots-file   "/var/named/data/named.secroots";
 	allow-query     { 192.168.0.0/24; };
@@ -82,7 +86,8 @@ systemctl start named
   > update add newhost.example.com 86400 A 172.16.1.1
   > send
   ```
-
-  * 参考连接
-    - [nsupdate文档](https://linux.die.net/man/8/nsupdate)
-	- [错误记录](https://blog.51cto.com/3108485/1911116)
+* 遇到问题
+  - 在/var/named/data/named.run的日志中出现error (broken trust chain) resolving 'www.baidu.com/A/IN': 1.1.0.1#53。由于开启DNSsec验证导致，在bind9的配置文件中将dnssec-enable、dnssec-validation关闭即可。
+* 参考连接
+  - [nsupdate文档](https://linux.die.net/man/8/nsupdate)
+  -  [错误记录](https://blog.51cto.com/3108485/1911116)
