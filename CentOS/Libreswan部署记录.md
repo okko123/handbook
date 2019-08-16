@@ -8,13 +8,21 @@
 - 配置本地网络网关
 - 创建连接
 
-### 待测试，在linux上使用OpenSwan打通VPN
-- 问题：配置文件配置
-
-### 部署libreswan
+### libreswan与Azure托管VPN构建site2site模式的VPN连接
+---
 * 环境设定，实验的操作系统CentOS Linux release 7.6.1810
+---
 ```bash
+#使用yum安装libreswan
 yum install libreswan -y
+
+#修改系统参数，执行systctl -p使其生效
+cat > /etc/sysctl.conf <<'EOF'
+
+EOF
+sysctl -p
+
+#添加连接配置
 cat > /etc/ipsec.d/site2site.conf <<'EOF'
 conn conn2Azure
         authby=secret
@@ -37,9 +45,17 @@ conn conn2Azure
         salifetime=3600s
         type=tunnel
 EOF
+
+#修改ipsec的PSK
 cat > /etc/ipsec.d/site2site.secrets <<'EOF'
 %any 0.0.0.0: PSK "azure2gcp"
 EOF
+
+#启动/停止/查看ipsec
+systemctl start/stop/status ipsec
+
+#验证ipsec的配置
+ipsed verify
 ```
 ## 参考连接
 * [官方配置教程](https://techcommunity.microsoft.com/t5/ITOps-Talk-Blog/Step-By-Step-Connect-your-AWS-and-Azure-environments-with-a-VPN/ba-p/339211)
@@ -48,3 +64,4 @@ EOF
 * [Azure说明-2](https://docs.azure.cn/zh-cn/articles/azure-operations-guide/virtual-network/aog-virtual-network-howto-connect-routebased-vpn-and-policybased-vpn)
 * [libreswan](https://libreswan.org/wiki/Microsoft_Azure_configuration)
 * [微软官方ipsec配置要求](https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpn-devices)
+* [redhat7官方文档](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/7/html/security_guide/sec-Securing_Virtual_Private_Networks#sec-Host-To-Host_VPN_Using_Libreswan)
