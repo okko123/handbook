@@ -16,9 +16,17 @@
 #使用yum安装libreswan
 yum install libreswan -y
 
-#修改系统参数，执行systctl -p使其生效
-cat > /etc/sysctl.conf <<'EOF'
-
+#修改系统参数，执行systctl -p使其生效，rp_filter需要根据实际网卡命名调整
+cat >> /etc/sysctl.conf <<'EOF'
+net.ipv4.ip_forward = 1
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.default.send_redirects = 0
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+net.ipv4.conf.all.rp_filter = 0
+net.ipv4.conf.default.rp_filter = 0
+net.ipv4.conf.eth0.rp_filter = 0
+net.ipv4.conf.lo.rp_filter = 0
 EOF
 sysctl -p
 
@@ -56,6 +64,9 @@ systemctl start/stop/status ipsec
 
 #验证ipsec的配置
 ipsed verify
+
+#删除/增加/启动/停止连接
+ipsec auto --add/delete/up/down connect
 ```
 ## 参考连接
 * [官方配置教程](https://techcommunity.microsoft.com/t5/ITOps-Talk-Blog/Step-By-Step-Connect-your-AWS-and-Azure-environments-with-a-VPN/ba-p/339211)
@@ -63,5 +74,6 @@ ipsed verify
 * [Azure说明-1](https://docs.azure.cn/zh-cn/vpn-gateway/vpn-gateway-about-vpn-gateway-settings#vpntype)
 * [Azure说明-2](https://docs.azure.cn/zh-cn/articles/azure-operations-guide/virtual-network/aog-virtual-network-howto-connect-routebased-vpn-and-policybased-vpn)
 * [libreswan](https://libreswan.org/wiki/Microsoft_Azure_configuration)
+* [libreswan密钥文件配置](https://libreswan.org/man/ipsec.secrets.5.html)
 * [微软官方ipsec配置要求](https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpn-devices)
 * [redhat7官方文档](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/7/html/security_guide/sec-Securing_Virtual_Private_Networks#sec-Host-To-Host_VPN_Using_Libreswan)
