@@ -9,8 +9,8 @@
 - 创建连接
 
 ### libreswan与Azure托管VPN构建site2site模式的VPN连接
----
 * 环境设定，实验的操作系统CentOS Linux release 7.6.1810
+* libreswan-3.15-7.3.9
 ---
 ```bash
 #使用yum安装libreswan
