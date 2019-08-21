@@ -51,7 +51,9 @@
   
   kubectl get service -l app=nginx-ingress --namespace ingress-basic
   ```
+- 创建内部LB。问题，LB创建后无法访问80端口
 
 ## 参考连接
  - [在 Azure Kubernetes 服务 (AKS) 中使用 Helm 安装应用程序](https://docs.microsoft.com/zh-cn/azure/aks/kubernetes-helm)
  - [在 Azure Kubernetes 服务 (AKS) 中创建入口控制器](https://docs.microsoft.com/zh-cn/azure/aks/ingress-basic)
+ - [在 AKS 服务总创建内部LB](https://docs.microsoft.com/zh-cn/azure/aks/internal-lb)
