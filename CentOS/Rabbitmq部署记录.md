@@ -36,8 +36,13 @@ rabbitmqctl add_vhost VHOST_NAME
 rabbitmqctl add_user USER PASSWORD
 rabbitmqctl set_permissions -p VHOST_NAME USER '.*' '.*' '.*'
 ```
-
+* 使用rabbitmq-plugins开启management web ui
+```bash
+# 默认访问端口15672，guest用户只允许localhost进行访问
+rabbitmq-plugins enable rabbitmq_management
+```
 * 参考信息
   - [rabbitmq官方文档](https://www.rabbitmq.com/install-rpm.html)
+  - [rabbitmq内存使用](https://www.rabbitmq.com/memory-use.html)
   - [erlang官方文档](https://www.erlang-solutions.com/resources/download.html)
   - [权限配置](https://www.jianshu.com/p/7d071bffea24)
