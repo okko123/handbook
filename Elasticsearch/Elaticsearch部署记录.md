@@ -52,7 +52,14 @@ systemctl enable elasticsearch.service
   ],
   "settings": {
     "index": {
-      "number_of_shards": "1"
+      "number_of_shards": "1",
+      "routing": {
+        "allocation": {
+          "require": {
+            "box_type": "hot"
+          }
+        }
+      }
     }
   },
   "mappings": {
