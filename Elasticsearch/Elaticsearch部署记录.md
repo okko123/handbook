@@ -1,5 +1,6 @@
 ## Elasticsearch部署记录
 * 环境设定，实验的操作系统CentOS Linux release 7.6.1810
+* 测试使用的Elasticsearch版本为7.3
 
 |IP|角色|数据冷热|
 |-|-|-|
