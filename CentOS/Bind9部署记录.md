@@ -1,5 +1,6 @@
 # 使用Bind9 建立DNS服务
 * 环境设定，实验的操作系统CentOS Linux release 7.6.1810
+* Bind9：9.9.4
 ```bash
 yum install bind -y
 
@@ -35,6 +36,11 @@ options {
 
 	pid-file "/run/named/named.pid";
 	session-keyfile "/run/named/session.key";
+};
+
+#使用named -V 是否开启xml的编译参数
+statistics-channels {
+     inet 127.0.0.1 port 8080 allow { 127.0.0.1; };
 };
 
 logging {
@@ -90,4 +96,5 @@ systemctl start named
   - 在/var/named/data/named.run的日志中出现error (broken trust chain) resolving 'www.baidu.com/A/IN': 1.1.0.1#53。由于开启DNSsec验证导致，在bind9的配置文件中将dnssec-enable、dnssec-validation关闭即可。
 * 参考连接
   - [nsupdate文档](https://linux.die.net/man/8/nsupdate)
-  -  [错误记录](https://blog.51cto.com/3108485/1911116)
+  - [错误记录](https://blog.51cto.com/3108485/1911116)
+  - [开启xml端口](https://kb.isc.org/docs/aa-00769)
