@@ -15,7 +15,7 @@
   kubectl create namespace beta
   kubectl create namespace ingress-basic
   ```
-- 创建nginx入口控制器
+- 创建nginx公网入口控制器
   ```bash
   创建服务帐户，在已启用 RBAC 的 AKS 群集中部署 Helm 之前，需要 Tiller 服务的服务帐户  和角色绑定。
   cat > helm-rbac.yaml <<EOF
@@ -52,8 +52,18 @@
   kubectl get service -l app=nginx-ingress --namespace ingress-basic
   ```
 - 创建内部LB。问题，LB创建后无法访问80端口
+  ```bash
+  #clone helm的模板
+  git clone https://github.com/helm/charts.git
+  cd charts/stable/nginx-ingress/
+  #生成yaml文件
+  helm template . --name gingerbread-man > internal-lb.yaml
+  kubectl create -f internal-lb.yaml
+  ```
 
 ## 参考连接
  - [在 Azure Kubernetes 服务 (AKS) 中使用 Helm 安装应用程序](https://docs.microsoft.com/zh-cn/azure/aks/kubernetes-helm)
  - [在 Azure Kubernetes 服务 (AKS) 中创建入口控制器](https://docs.microsoft.com/zh-cn/azure/aks/ingress-basic)
  - [在 AKS 服务总创建内部LB](https://docs.microsoft.com/zh-cn/azure/aks/internal-lb)
+ - [多个nginx-ingress controller](https://kubernetes.github.io/ingress-nginx/user-guide/multiple-ingress/)
+ - [如何在阿里云Kubernetes集群中部署多个Ingress Controller](https://yq.aliyun.com/articles/645856)
