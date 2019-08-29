@@ -58,6 +58,7 @@
   cd charts/stable/nginx-ingress/
   #生成yaml文件
   helm template . --name gingerbread-man > internal-lb.yaml
+  
   kubectl create -f internal-lb.yaml
   ```
 
