@@ -98,3 +98,4 @@ systemctl start named
   - [nsupdate文档](https://linux.die.net/man/8/nsupdate)
   - [错误记录](https://blog.51cto.com/3108485/1911116)
   - [开启xml端口](https://kb.isc.org/docs/aa-00769)
+  - [bind9配置解析](https://xieyugui.wordpress.com/2017/06/11/bind-9-10-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/)

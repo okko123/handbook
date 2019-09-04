@@ -25,7 +25,7 @@ POST /my_index_name*/_close
 DELETE /my_index_name
 DELETE /my_index_name*
 
-#查看所有缩影
+#查看所有索引
 GET '/_cat/indices?v'
 ```
 ## 集群

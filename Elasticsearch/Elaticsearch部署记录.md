@@ -78,9 +78,10 @@ systemctl enable elasticsearch.service
 ---
 ## es资料
 * https://www.infvie.com/ops-notes/elkstack-beats
-* https://www.elastic.co/guide/en/elasticsearch/reference/current/shard-allocation-filtering.html\
+* https://www.elastic.co/guide/en/elasticsearch/reference/current/shard-allocation-filtering.html
 * https://www.elastic.co/guide/en/elasticsearch/reference/current/delayed-allocation.html
 * https://www.elastic.co/guide/en/elasticsearch/reference/5.5/cluster-update-settings.html
+* https://www.elastic.co/guide/cn/elasticsearch/guide/cn/_changing_settings_dynamically.html
 
 ## mapping/datatime
 * https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-date-format.html
