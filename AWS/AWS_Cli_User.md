@@ -20,6 +20,10 @@ AWS cli命令行工具的使用记录
   - 创建部署
     - aws deploy create-deployment --application-name WordPress_App --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name WordPress_DepGroup --s3-location bucket=codedeploydemobucket,bundleType=zip,key=WordPressApp.zip
 
+### 恢复S3上删除的对象，前提是开启版本控制
+  - aws s3api list-object-versions --bucket examplebucket
+  - aws s3api delete-object --bucket protectedbucket --version-id 'example.d6tjAKF1iObKbEnNQkIMPjj' --key undelete-key
 ## 参考资料
 - [AWS Cli ec2手册](https://docs.aws.amazon.com/cli/latest/reference/ec2/)
 - [CodeDeploy手册](https://docs.aws.amazon.com/zh_cn/codedeploy/latest/userguide/tutorials-wordpress.html)
+- [检索已删除的Amazon S3对象](https://aws.amazon.com/cn/premiumsupport/knowledge-center/s3-undelete-configuration/?nc1=f_ls )

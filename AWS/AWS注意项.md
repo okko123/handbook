@@ -20,3 +20,4 @@
    - On Aurora MySQL. mysql> CALL mysql.rds_set_external_master_with_auto_position ('External MySQL Host_Name',3306,'repl_user','password',0);
    - Start replication. mysql> CALL mysql.rds_start_replication ();
 - 默认情况下连接数限制，[参考连接](https://docs.aws.amazon.com/zh_cn/AmazonRDS/latest/AuroraUserGuide/AuroraMySQL.Managing.Performance.html)
+- 使用pt-online-schema-change做在线DDL，需要修改RDS的参数，log_bin_trust_function_creators=1。[参考连接](https://www.percona.com/blog/2016/07/01/pt-online-schema-change-amazon-rds/)
