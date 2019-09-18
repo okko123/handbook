@@ -1,4 +1,8 @@
-# rabbitmq部署安装笔记
+## RabbitMQ部署记录
+* 环境设定，实验的操作系统CentOS Linux release 7.6.1810
+* RabbitMQ 3.7.15
+---
+### 安装步骤
 * 安装erlang
 ```bash
 #Adding repository
