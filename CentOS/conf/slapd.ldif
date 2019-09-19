@@ -1,0 +1,72 @@
+dn: cn=config
+objectClass: olcGlobal
+cn: config
+olcArgsFile: /var/run/openldap/slapd.args
+olcPidFile: /var/run/openldap/slapd.pid
+olcLogFile: /var/log/ldap.log
+olcLogLevel: 16384
+olcTLSCACertificatePath: /etc/openldap/certs
+olcTLSCertificateFile: "/etc/openldap/certs/slapdcert.pem"
+olcTLSCertificateKeyFile: /etc/openldap/certs/slapdkey.pem
+
+dn: cn=module,cn=config
+objectClass: olcModuleList
+cn: module
+olcModulepath:	/usr/lib64/openldap
+olcModuleload: ppolicy.la
+olcModuleload: syncprov.la
+
+dn: cn=schema,cn=config
+objectClass: olcSchemaConfig
+cn: schema
+
+include: file:///etc/openldap/schema/corba.ldif
+include: file:///etc/openldap/schema/core.ldif
+include: file:///etc/openldap/schema/cosine.ldif
+include: file:///etc/openldap/schema/duaconf.ldif
+include: file:///etc/openldap/schema/dyngroup.ldif
+include: file:///etc/openldap/schema/inetorgperson.ldif
+include: file:///etc/openldap/schema/java.ldif
+include: file:///etc/openldap/schema/misc.ldif
+include: file:///etc/openldap/schema/nis.ldif
+include: file:///etc/openldap/schema/openldap.ldif
+include: file:///etc/openldap/schema/ppolicy.ldif
+include: file:///etc/openldap/schema/collective.ldif
+
+dn: olcDatabase=frontend,cn=config
+objectClass: olcDatabaseConfig
+objectClass: olcFrontendConfig
+olcDatabase: frontend
+
+dn: olcDatabase=config,cn=config
+objectClass: olcDatabaseConfig
+olcDatabase: config
+olcAccess: to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,c
+ n=auth" manage by dn.base="cn=Manager,dc=my-domain,dc=com" read by * none
+
+dn: olcDatabase=monitor,cn=config
+objectClass: olcDatabaseConfig
+olcDatabase: monitor
+olcAccess: to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,c
+ n=auth" read by dn.base="cn=Manager,dc=my-domain,dc=com" read by * none
+
+#
+# Backend database definitions
+#
+dn: olcDatabase=hdb,cn=config
+objectClass: olcDatabaseConfig
+objectClass: olcHdbConfig
+olcDatabase: hdb
+olcSuffix: dc=my-domain,dc=com
+olcRootDN: cn=Manager,dc=my-domain,dc=com
+olcDbDirectory:	/var/lib/ldap
+olcRootPW: secret
+olcDbCheckpoint: 1024 10
+olcAccess: to * by self write by * read
+olcDbIndex: objectClass eq,pres
+olcDbIndex: ou,cn,mail,surname,givenname    eq,pres,sub
+olcDbindex: uidNumber,gidNumber,loginShell  eq,pres
+olcDbindex: uid,memberUid                   eq,pres,sub
+olcDbindex: nisMapName,nisMapEntry          eq,pres,sub
+olcSizeLimit: 2000
+olcTimeLimit: 3600
