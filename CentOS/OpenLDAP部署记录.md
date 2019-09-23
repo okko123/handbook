@@ -4,12 +4,16 @@
 ---
 ### 安装步骤
 ```bash
-yum install openldap-servers openldap-clients -y
+yum install openldap-servers openldap-clients samba -y
+
 #Log
 cat >> /etc/rsyslog.conf << EOF
 local4.* /var/log/ldap.log
 EOF
+
 /etc/init.d/rsyslog restart
+
+systemctl start slapd
 ```
 ---
 ## OpenLDAP的配置文件生成
@@ -39,7 +43,7 @@ EOF
   mv slapdcert.pem /etc/openldap/certs/slapdcert.pem
   mv slapdkey.pem /etc/openldap/certs/slapdkey.pem
 
-  #修改slapd的配置，修改以下内容
+  #修改slapd的配置(不能动态修改)，修改以下内容
   olcTLSCertificateFile: /dir/cert.pem
   olcTLSCertificateKeyFile: /dir/key.pem
 
@@ -47,6 +51,9 @@ EOF
   cat >> /etc/openldap/ldap.conf <<EOF
   TLS_REQCERT allow
   EOF
+
+  #生成密码
+  slappasswd -s password
   ```
 ---
 ## slap开头的命令是服务端工具
@@ -76,3 +83,4 @@ ldapmodify -Q -Y EXTERNAL -H ldapi:/// -f /etc/openldap/schema/openldap.ldif
 * https://github.com/sios-tech/ansible-openldap-rhel7/blob/master/roles/ldap/tasks/main.yml
 * https://wiki.gentoo.org/wiki/Centralized_authentication_using_OpenLDAP/zh-cn
 * https://www.openldap.org/doc/admin24/tls.html
+* [syncrep的配置参数](http://www.zytrax.com/books/ldap/ch6/#syncrepl)

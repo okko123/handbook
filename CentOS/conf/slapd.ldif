@@ -41,22 +41,20 @@ olcDatabase: frontend
 dn: olcDatabase=config,cn=config
 objectClass: olcDatabaseConfig
 olcDatabase: config
-olcAccess: to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,c
- n=auth" manage by dn.base="cn=Manager,dc=my-domain,dc=com" read by * none
+olcAccess: to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage by dn.base="cn=Manager,dc=my-domain,dc=com" read by * none
 
 dn: olcDatabase=monitor,cn=config
 objectClass: olcDatabaseConfig
 olcDatabase: monitor
-olcAccess: to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,c
- n=auth" read by dn.base="cn=Manager,dc=my-domain,dc=com" read by * none
+olcAccess: to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" read by dn.base="cn=Manager,dc=my-domain,dc=com" read by * none
 
 #
 # Backend database definitions
 #
-dn: olcDatabase=hdb,cn=config
+dn: olcDatabase=mdb,cn=config
 objectClass: olcDatabaseConfig
 objectClass: olcHdbConfig
-olcDatabase: hdb
+olcDatabase: mdb
 olcSuffix: dc=my-domain,dc=com
 olcRootDN: cn=Manager,dc=my-domain,dc=com
 olcDbDirectory:	/var/lib/ldap
@@ -70,3 +68,27 @@ olcDbindex: uid,memberUid                   eq,pres,sub
 olcDbindex: nisMapName,nisMapEntry          eq,pres,sub
 olcSizeLimit: 2000
 olcTimeLimit: 3600
+
+# Slave information
+# Mandatory parameters are rid, provider and searchbase all others are optional.
+# rid=001
+# provider=ldap[s]://hostname[:port]
+# [tls_reqcert=allow|demand|try|never]
+# [type=refreshOnly|refreshAndPersist]
+# [interval=dd:hh:mm:ss]
+# [retry=retry-interval num-retries | + ]
+# searchbase=base DN
+# [scope=sub|one|base]
+# [attrs=attr-list]
+# [filter=filter-str]
+# [bindmethod=simple|sasl]
+# [binddn=dn]
+# [credentials=passwd]
+
+olcSynrepl: rid=001 provider=ldap://1.1.1.1:389 tls_reqcert=allow type=refreshAndPersist interval=00:00:00:10 retry="10 10 600 +" searchbase="dc=my-domain,dc=com scope=sub attrs="*,+" filter="(objectClass=*)" bindmethod=simple binddn="cn=Manager,dc=my-domain,dc=com" credentials=passwd
+
+# ppolicy
+olcPPolicyDefault: cn=default,ou=policies,dc=my-domain,dc=com
+olcPPolicyHashCleartext: TRUE
+olcPPolicyUseLockout: FALSE
+olcPPolicyForwardUpdates: FALSE
