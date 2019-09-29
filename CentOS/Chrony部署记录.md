@@ -1,5 +1,6 @@
-## 使用chrony代替NTPD做时间同步
-* 环境设定，实验的操作系统CentOS Linux release 7.6.1810
+# 使用chrony代替NTPD做时间同步
+* 操作系统: CentOS Linux release 7.6.1810
+* chrony: 3.2
 
 |IP|角色|
 |-|-|

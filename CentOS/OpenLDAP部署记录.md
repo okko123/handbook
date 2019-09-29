@@ -1,6 +1,6 @@
-## OpenLDAP部署记录
-* 环境设定，实验的操作系统CentOS Linux release 7.6.1810
-* OpenLDAP 2.4.44
+# OpenLDAP部署记录
+* 操作系统: CentOS Linux release 7.6.1810
+* OpenLDAP: 2.4.44
 ---
 ### 安装步骤
 ```bash
