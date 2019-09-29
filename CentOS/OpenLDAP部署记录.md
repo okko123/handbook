@@ -78,6 +78,7 @@ ldapmodify -Q -Y EXTERNAL -H ldapi:/// -f /etc/openldap/schema/openldap.ldif
 ```
 ---
 ## 参考连接
+* https://wiki.archlinux.org/index.php/OpenLDAP_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)
 * http://www.bewindoweb.com/223.html
 * https://segmentfault.com/a/1190000014683418
 * https://github.com/sios-tech/ansible-openldap-rhel7/blob/master/roles/ldap/tasks/main.yml
