@@ -76,6 +76,9 @@ ldapmodify -Q -Y EXTERNAL -H ldapi:/// -f /etc/openldap/schema/inetorgperson.ldi
 ldapmodify -Q -Y EXTERNAL -H ldapi:/// -f /etc/openldap/schema/nis.ldif
 ldapmodify -Q -Y EXTERNAL -H ldapi:/// -f /etc/openldap/schema/openldap.ldif
 ```
+## 第三方工具
+自助修改ldap密码
+* https://ltb-project.org/doku.php
 ---
 ## 参考连接
 * https://wiki.archlinux.org/index.php/OpenLDAP_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)

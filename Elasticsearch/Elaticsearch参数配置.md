@@ -1,4 +1,27 @@
 * 测试使用的Elasticsearch版本为7.3
+## 系统层面优化
+* 配置系统的ulimit值、内核参数
+  ```bash
+  cat >> /etc/security/limits.conf <<EOF
+  elasticsearch  soft  nofile  65535
+  elasticsearch  hard  nofile  65535
+  root           soft  nproc   65535
+  root           hard  nproc   65535
+  EOF
+
+  sysctl -w vm.max_map_count=262144
+  ```
+* 关闭swapping。Elasticsearch的参数： bootstrap.mlockall: true。
+* Elasticsearch独占机器的情况下，分配一半的物理内存。例如：物理服务器为64G内存，ES的内存应分配32G
+* 设置 ES 集群内存的时候，还有一点就是确保堆内存最小值（Xms）与最大值（Xmx）的大小是相同的，防止程序在运行时改变堆内存大小，这是一个很耗系统资源的过程。
+
+* 使用API接口检查所有机器是的mlockall配置、ulimit配置：
+  ```bash
+  GET /_nodes?filter_path=**.mlockall
+  GET /_nodes/stats/process?filter_path=**.max_file_descriptors
+  ```
+
+## Elasticsearch的参数调优
 * Elasticsearch里很多设置都是动态的，可以通过API修改。集群更新API有两种工作模式：
   - 临时transient：这些变更在集群重启之前一直会生效。一旦整个集群重启，这些配置就被清除。
   - 永久persistent：这些变更会永久存在直到被显式修改。即使全集群重启它们也会存活下来并覆盖掉静态配置文件里的选项。
@@ -7,10 +30,10 @@
   PUT /_cluster/settings
   {
       "persistent" : {
-          "discovery.zen.minimum_master_nodes" : 2 
+          "discovery.zen.minimum_master_nodes" : 2
       },
       "transient" : {
-          "indices.store.throttle.max_bytes_per_sec" : "50mb" 
+          "indices.store.throttle.max_bytes_per_sec" : "50mb"
       }
   }
 
@@ -40,6 +63,28 @@ PUT /_cluster/settings
     }
 }
 ```
+* 配置索引的参数
+  * index.refresh_interval：这个参数的意思是数据写入后几秒可以被搜索到，默认是 1s。每次索引的 refresh 会产生一个新的 lucene 段, 这会导致频繁的合并行为，如果业务需求对实时性要求没那么高，可以将此参数调大，实际调优告诉我，该参数确实很给力，cpu 使用率直线下降。
+  * index.translog.flush_threshold_size：translog日志刷新日志的缓存大小，默认值512M
+  * index.translog.sync_interval：translog日志刷新到磁盘的时间间隔，默认值为5秒
+  * index.translog.durability：在每个索引，删除，更新或批量请求之后是否同步并提交事务日志。只允许配置值[request|async]
+  ```json
+  PUT /my_index/_settings
+  {
+     "settings": {
+        "index": {
+            "number_of_shards": "3",
+            "number_of_replicas": "0",
+            "refresh_interval": "30s",
+            "translog": {
+                "flush_threshold_size": "1GB",
+                "sync_interval": "60s",
+                "durability": "async"
+            }
+        }
+    }
+  }
+  ```
 ## 磁盘信息的配置，磁盘的三个默认警戒水位线
   - cluster.routing.allocation.disk.watermark.low
     - 低警戒水位线——默认为磁盘容量的85%。Elasticsearch不会将分片分配给使用磁盘超过85%的节点。它也可以设置为绝对字节值（如500mb），以防止Elasticsearch在小于指定的可用空间量时分配分片。此设置不会影响新创建的索引的主分片，或者特别是之前任何从未分配过的分片。

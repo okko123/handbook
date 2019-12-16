@@ -1,14 +1,20 @@
 ## Elasticsearch常用的API
 * 测试使用的Elasticsearch版本为7.3
 ## 节点
-* 排除节点
 ```json
+#排除节点
 PUT /_cluster/settings
 {
   "transient" : {
     "cluster.routing.allocation.exclude._ip" : "10.0.0.1"
   }
 }
+
+#查看节点属性
+GET /_cat/nodeattrs?v
+
+#查看节点
+GET /_cat/nodes?v
 ```
 
 ## 索引
@@ -33,6 +39,10 @@ PUT /my_index/_settings
 {
     "number_of_replicas": 1
 }
+
+#合并段(segments)
+POST /my_index/_forcemerge?max_num_segments=1
+
 ```
 ## 模板
 ```json
