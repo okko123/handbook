@@ -35,10 +35,10 @@
 #### Elasticsearch节点配置
 |Instance configuration|Instance types|	AWS EC2 instance type|Memory Sizes|
 |---|---|---|---|
-|aws.data.highio.i3|Elasticsearch data nodes optimized for balanced RAM/vCPU/Disk ratios and performance|i3.8xlarge|1,2,4,8|
-|aws.data.highstorage.d2|Elasticsearch data nodes optimized for cost effective storage|d2.4xlarge|
-|aws.data.highcpu.m5|Elasticsearch data nodes optimized for high CPU performance 1:2 vCPU allocation compared to highio types|m5.12xlarge|
-|aws.data.highmem.r4|Elasticsearch data nodes optimized for lower cost with lower storage ratio|r4.8xlarge|
+|aws.data.highio.i3|Elasticsearch data nodes optimized for balanced RAM/vCPU/Disk ratios and performance|i3.8xlarge<sup>2</sup>|1,2,4,8|
+|aws.data.highstorage.d2|Elasticsearch data nodes optimized for cost effective storage|d2.4xlarge<sup>3</sup>|
+|aws.data.highcpu.m5|Elasticsearch data nodes optimized for high CPU performance 1:2 vCPU allocation compared to highio types|m5.12xlarge<sup>4</sup>|
+|aws.data.highmem.r4|Elasticsearch data nodes optimized for lower cost with lower storage ratio|r4.8xlarge<sup>5</sup>|
 |aws.master.r4|Elasticsearch master eligible nodes used as tiebreakers to establish a quorum in case of 2 availability zone deployments, or as dedicated master across 3 availability zones|r4.8xlarge|
 |aws.ingest.m5|Ingest nodes|m5.12xlarge|
 |aws.ml.m5|Data nodes|m5.12xlarge|

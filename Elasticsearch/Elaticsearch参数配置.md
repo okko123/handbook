@@ -51,18 +51,20 @@ PUT /_cluster/settings
 }
 ```
 * 分片重新平衡
+  ```json
+    PUT /_cluster/settings
+  {
+      "persistent":{
+          "cluster.routing.rebalance.enable" : "all"
+      }
+  }
+  ```
   - all - (default) Allows shard balancing for all kinds of shards.
   - primaries - Allows shard balancing only for primary shards.
   - replicas - Allows shard balancing only for replica shards.
   - none - No shard balancing of any kind are allowed for any indices.
-```json
-PUT /_cluster/settings
-{
-    "persistent":{
-        "cluster.routing.rebalance.enable" : "all"
-    }
-}
-```
+
+
 * 配置索引的参数
   * index.refresh_interval：这个参数的意思是数据写入后几秒可以被搜索到，默认是 1s。每次索引的 refresh 会产生一个新的 lucene 段, 这会导致频繁的合并行为，如果业务需求对实时性要求没那么高，可以将此参数调大，实际调优告诉我，该参数确实很给力，cpu 使用率直线下降。
   * index.translog.flush_threshold_size：translog日志刷新日志的缓存大小，默认值512M
