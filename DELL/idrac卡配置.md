@@ -1,6 +1,11 @@
 ## 使用OpenIPMI工具对idrac卡进行配置。确认已安装OpenIPMI工具包
-* 使用的机型为PowerEdge R730
+* 使用的机型为PowerEdge R730，使用的idrac8
 * 使用的操作系统为CentOS 7
+* idrac9的新特性：对于iDRAC 9，购买配置时将提供一项称为“安全密码”的功能。
+  * 如果您选择了对iDRAC进行安全默认访问，可以使用系统信息标签背面的iDRAC安全默认密码。
+  * 如果您未选择对 iDRAC 进行安全默认访问，则默认用户名和密码为 “root” 和 “calvin”。
+  * 安全密码位于系统标签下方的标签上，该标签上还有“服务编号”信息。如果标签上的默认密码为空，则表示必须使用默认凭据root/calvin。
+  * 使用1.8.18以下版本的ipmitool工具与idrac9通信出现以下报错“Error in setting nic selection (Unknown (0x80))”。需要在dell官网上下载iDRACTools工具包，安装dell打了补丁后的ipmitool的rpm包。
 ---
 ```bash
 yum install OpenIPMI ipmitool
