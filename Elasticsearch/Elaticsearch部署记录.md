@@ -86,3 +86,4 @@ systemctl enable elasticsearch.service
 ## mapping/datatime
 * https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-date-format.html
 * https://www.elastic.co/guide/en/logstash/current/event-dependent-configuration.html
+* [时间格式](https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html)

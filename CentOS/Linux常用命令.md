@@ -2,6 +2,8 @@
 blkid /dev/sda1
 # 查看所有磁盘的UUID
 blkid -o list
+# 列出系统上的块设备
+lsblk
 # dmicecode工具使用
 ```bash
 # 获取不同模块的信息
