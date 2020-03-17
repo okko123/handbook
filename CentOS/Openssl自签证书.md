@@ -143,5 +143,5 @@ openssl ca -config ./ca.cnf -batch -notext \
 -in "${DIR}/${DOMAIN}.csr.pem" \
 -out "${DIR}/${DOMAIN}.crt" \
 -cert ./out/ca.crt \
--keyfile ./out/${DOMAIN}.key.pem
+-keyfile ./out/ca.key.pem
 ```
