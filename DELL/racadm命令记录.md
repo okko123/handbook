@@ -21,6 +21,19 @@
     racadm  jobqueue create RAID.Integrated.1-1
     racadm serveraction powerup
     ```
+* 创建raid
+  ```bash
+  racadm raid get pdisks
+
+  racadm raid createvd:RAID.Integrated.1-1 -rl r0 -wp wt -rp nra -name raid_0 -pdkey:Disk.Bay.0:Enclosure.Internal.0-1:RAID.Integrated.1-1,Disk.Bay.1:Enclosure.Internal.0-1:RAID.Integrated.1-1,Disk.Bay.2:Enclosure.Internal.0-1:RAID.Integrated.1-1,Disk.Bay.3:Enclosure.Internal.0-1:RAID.Integrated.1-1,Disk.Bay.4:Enclosure.Internal.0-1:RAID.Integrated.1-1,Disk.Bay.5:Enclosure.Internal.0-1:RAID.Integrated.1-1
+  
+  racadm  jobqueue create RAID.Integrated.1-1
+  racadm serveraction hardreset
+  ```
+* 初始化raid
+  ```bash
+  racadm raid init:Disk.Virtual.0:RAID.Integrated.1-1 
+  ```
 ### 修改启动配置
 * 修改下次启动设备为PXE
     ```bash

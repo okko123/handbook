@@ -1,13 +1,10 @@
 # kubenetest集群部署
-## 使用RKE进行部署
-* https://www.kubernetes.org.cn/4004.html
-* https://cloud.tencent.com/developer/article/1450378
 ## 直接在CentOS系统上进行部署
 * https://www.kubernetes.org.cn/doc-16
 ## 使用kubeadm安装k8s集群
 * 使用CentOS7系统
-  1. 对系统进行初始花
-     ```bash
+1. 对所有节点的系统进行初始
+   ```bash
      #!/bin/bash
      set -uexo pipefail
      
@@ -64,12 +61,9 @@
      net.netfilter.nf_conntrack_tcp_timeout_established=1200
      EOF
      
-     # install Docker
-     function DOCKER {
-         yum install -y docker
-         systemctl daemon-reload
-         systemctl enable --now docker
-     }
+     yum install -y docker
+     systemctl daemon-reload
+     systemctl enable --now docker
      
      # install k8s
      function K8S {
@@ -80,11 +74,11 @@
      enabled=1
      gpgcheck=1
      repo_gpgcheck=1
-     gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/     rpm-package-key.gpg
+     gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
      EOF
      
      setenforce 0
-     sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+     sed -i 's/^SELINUX=enforcing$/SELINUX=disabled/' /etc/selinux/config
      yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
      systemctl enable --now kubelet
      
@@ -98,5 +92,74 @@
      EOF
      sysctl --system
      }
+     
+     # 安装kubeadmin、kubectl、kubelete工具
+     cat <<EOF > /etc/yum.repos.d/kubernetes.repo
+     [kubernetes]
+     name=Kubernetes
+     baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+     enabled=1
+     gpgcheck=1
+     repo_gpgcheck=1
+     gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https:/packages.       cloud.google.com/yum/doc/rpm-package-key.gpg
+     EOF
+     
+     setenforce 0
+     sed -i 's/^SELINUX=enforcing$/SELINUX=disabled/' /etc/selinux/config
+     yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
+     systemctl enable --now kubelet
+     
+     lsmod | grep br_netfilter
+     if [ "$?" != "0" ];then
+         modprobe br_netfilter
+     fi
+     cat <<EOF >  /etc/sysctl.d/k8s.conf
+     net.bridge.bridge-nf-call-ip6tables = 1
+     net.bridge.bridge-nf-call-iptables = 1
+     EOF
+     sysctl --system
      ```
-    2. 安装kubeadmin、kubectl、kubelete工具
+2. 使用kubeadmin初始化集群
+   ```bash
+       #指定pod的cidr、service的cidr
+       kubeadm init --pod-network-cidr 10.244.0.0/16 --service-cidr 10.96.0.0/12
+
+       #复制kubectl的配置文件
+       mkdir -p $HOME/.kube
+       sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+       sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+       wget https://docs.projectcalico.org/v3.11/manifests/calico.yaml
+       sed -i 's|192.168.0.0/16|10.244.0.0/16|g' calico.yaml
+       kubectl apply -f calico.yaml
+       rm -f calico.yaml
+
+       #检查kubernetes的集群状态
+       kubectl get nodes
+       NAME            STATUS   ROLES    AGE     VERSION
+       k8s-master-1    Ready    master   1d      v1.17.4
+
+       #在master上检查token是否有效，默认情况下，token会在24小时后失效，需要在master节点上重新创建token
+       kubeadm token list
+       kubeadm token create 
+
+       #获取ca的hash字符串
+       openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | \
+       openssl dgst -sha256 -hex | sed 's/^.* //'
+       
+       #添加work节点，在work节点上执行
+       kubeadm join MASTER_IP:6443 --token xxxxxx --discovery-token-ca-cert-hash sha256:<hash>
+
+       #设置节点的标签
+       kubectl label node k8s-node1 node-role.kubernetes.io/worker=worker
+    ```
+3. 移除节点
+   ```bash
+   kubectl drain <node name> --delete-local-data --force --ignore-daemonsets
+   kubectl delete node <node name>
+   
+   #登录移除的节点上执行
+   kubeadm reset
+   iptables -F && iptables -t nat -F && iptables -t mangle -F && iptables -X
+   ipvsadm -C
+   ```
