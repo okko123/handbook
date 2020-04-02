@@ -7,6 +7,7 @@ AWS cli命令行工具的使用记录
   - aws ec2 replace-iam-instance-profile-association
 - 查看ec2实例
   - aws ec2 describe-instances --filters Name=instance-type,Values=i3.2xlarge --query "Reservations[*].Instances[*].{ID:InstanceId,DNS:PrivateDnsName,State:State}"
+  - aws ec2 describe-instances --filters Name=instance-state-name,Values=running
 
 ### Cloudwatch
 - 设置告警的状态为ALARM
