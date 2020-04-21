@@ -19,7 +19,10 @@
     * pods (aka 'po')
     * secrets
     * services (aka 'svc')
+* 获取yaml配置文件帮助：kubectl explain
 * 删除资源：kubectl delete
+  * pods
+  * deployment
 ## kubenetest pv和pvc使用记录
 * https://kubernetes.io/zh/docs/concepts/storage/volumes/#hostpath
 ## alphine系统使用笔记
