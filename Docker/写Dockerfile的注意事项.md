@@ -14,7 +14,7 @@
    * 在一致的环境中，从源代码构建
    * 在单独的步骤中获取依赖项
    * 使用多阶段构建来删除构建时的依赖项
-   
+5. 使用多阶段构建
 
 ## 参考连接
 * [你确定你会写Dockerfile](https://fuckcloudnative.io/posts/intro-guide-to-dockerfile-best-practices/)

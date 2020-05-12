@@ -5,7 +5,7 @@
     * namespace
     * service
     * secret
-* 获取信息：kubectl get
+* 获取信息：kubectl get;列出受支持的资源类型(kubectl api-resources)
     * all
     * configmaps (aka 'cm')
     * deployments (aka 'deploy')
@@ -19,6 +19,7 @@
     * pods (aka 'po')
     * secrets
     * services (aka 'svc')
+    * certificatesigningrequests (aka 'csr')
 * 获取yaml配置文件帮助：kubectl explain
 * 删除资源：kubectl delete
   * pods
