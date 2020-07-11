@@ -41,5 +41,35 @@
        -in yourdomain.com.csr \
        -out yourdomain.com.crt
    ```
+### harbor和docker配置自签证书
+1. 配置证书位置，使用位置/etc/docker/cert.d/ca
+   ```bash
+   #配置harbor的证书位置
+   mkdir -p /etc/docker/cert.d/ca
+   cp yourdomain.com.crt /etc/docker/cert.d/ca/
+   cp yourdomain.com.key /etc/docker/cert.d/ca/
+   #配置docker信任证书的位置
+   openssl x509 -inform PEM -in yourdomain.com.crt -out yourdomain.com.cert
+   cp yourdomain.com.crt /etc/docker/cert.d/yourdomain.com/
+   cp yourdomain.com.key /etc/docker/cert.d/yourdomain.com/
+   cp ca.crt /etc/docker/certs.d/yourdomain.com/
+   #如果你不使用默认https的443端口，请在文件夹上添加端口
+   /etc/docker/certs.d/yourdomain.com:port 或者 /etc/docker/certs.d/harbor_IP:port
+   ```
+2. 重启docker engine服务
+   ```bash
+   systemctl restart docker
+   ```
+3. 配置harbor服务，修改harbor的配置文件，harbor.yml，确认打开https配置，并配置certificate和private_key的路径
+   ```bash
+   ./prepare
+   docker-compose down -v
+   docker-compose up -d
+   ```
+4. 验证
+   - docker login yourdomain.com
+   - 在浏览器打开：https://yourdomain.com
+
 ## 参考资料
 - [官方配置https指南](https://goharbor.io/docs/1.10/install-config/configure-https/)
+- [Harbor 使用自签证书支持 Https 访问](https://www.chenshaowen.com/blog/support-https-access-harbor-using-self-signed-cert.html   )
