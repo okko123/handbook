@@ -24,6 +24,9 @@
 * 删除资源：kubectl delete
   * pods
   * deployment
+* 获取集群pod、service的CIDR记录
+  * kubectl cluster-info dump | grep -m 1 service-cluster-ip-range
+  * kubectl cluster-info dump | grep -m 1 cluster-cidr
 ## kubenetest pv和pvc使用记录
 * https://kubernetes.io/zh/docs/concepts/storage/volumes/#hostpath
 ## alphine系统使用笔记

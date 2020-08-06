@@ -86,5 +86,5 @@ prom/prometheus:v2.19.2 \
      git clone https://github.com/coreos/kube-prometheus.git
      #必须等待所有pods创建完毕，才能进行下一步操作
      kubectl create -f manifests/setup
-     kubectl create -f manifests/setup
+     kubectl create -f manifests
      ```
