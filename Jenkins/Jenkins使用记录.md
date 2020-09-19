@@ -6,3 +6,14 @@
 ### 参数化构建选择tag
 - 需要安装插件Git Parameter
 - 在任务配置中，添加参数化构建过程
+
+
+
+## 重置Jenkins的build序号
+在Jenkins的系统管理 - 脚本命令行中执行
+item = Jenkins.instance.getItemByFullName("your-job-name-here")
+//THIS WILL REMOVE ALL BUILD HISTORY
+item.builds.each() { build ->
+  build.delete()
+}
+item.updateNextBuildNumber(1)

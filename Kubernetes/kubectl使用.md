@@ -27,7 +27,19 @@
 * 获取集群pod、service的CIDR记录
   * kubectl cluster-info dump | grep -m 1 service-cluster-ip-range
   * kubectl cluster-info dump | grep -m 1 cluster-cidr
-## kubenetest pv和pvc使用记录
+## kubernetes 污点使用
+* kubectl taint node [node] key=value[effect]   
+  * 其中[effect] 可取值: [ NoSchedule | PreferNoSchedule | NoExecute ]
+  * NoSchedule: 一定不能被调度
+  * PreferNoSchedule: 尽量不要调度
+  * NoExecute: 不仅不会调度, 还会驱逐Node上已有的Pod
+  ```bash
+  ## master节点设置taint
+  kubectl taint nodes master1 node-role.kubernetes.io/master=:NoSchedule
+  ## 所有节点删除taint
+  kubectl taint nodes --all node-role.kubernetes.io/master-
+  ```
+## kubernetes pv和pvc使用记录
 * https://kubernetes.io/zh/docs/concepts/storage/volumes/#hostpath
 ## alphine系统使用笔记
 * 安装telnet：apk add busybox-extras

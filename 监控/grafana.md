@@ -11,6 +11,10 @@ service grafana-server restart
   * 直连zabbix数据库（需要在grafana的Data Sources中配置MySQL数据源连接zabbix-DB）
 * 配置Zabbix的Dashboards；访问Configuration - Data Sources - Zabbix - Dashboards。点击import。
 
+
+## 出现Panel plugin not found: grafana-piechart-panel
+- 执行grafana-cli plugins install grafana-piechart-panel，安装插件
+- 重启grafana，kubectl -n monitoring rollout restart deploy grafana
 [参考连接]
 https://cloud.tencent.com/developer/article/1027332
 https://github.com/yangcvo/Grafana

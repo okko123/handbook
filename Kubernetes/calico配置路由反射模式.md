@@ -1,4 +1,5 @@
 ## calico 配置路由反射模式
+### 网络架构图![](img/k8s-bgp-1.png)
 1. 关闭当前Calico Mesh模式
    ```bash
    cat << EOF | calicoctl create -f -
@@ -56,3 +57,6 @@ netstat -natp | grep bird
 ```
 ### 参考信息
 - [OpenShift支持Calico BGP 路由反射（RR）模式](https://www.jianshu.com/p/1ea22c6d26fd)
+- [H3C交换机配置OSPF导入外部路由](https://www.h3c.com/cn/d_201802/1065959_30005_0.htm#_Toc505352341)
+- [H3C交换机配置BGP与IGP交互配置](https://www.h3c.com/cn/d_201802/1065961_30005_0.htm#_Toc505352832)
+- [Kubernetes网络组件之Calico策略实践(BGP、RR、IPIP)](https://blog.51cto.com/14143894/2463392?source=drh)
