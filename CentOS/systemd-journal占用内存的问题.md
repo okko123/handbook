@@ -15,6 +15,16 @@ KiB Swap:        0 total,        0 free,        0 used. 15497552 avail Mem
 查看配置文件参数man 5 journald.conf
 修改RuntimeMaxUse、RuntimeMaxFileSize、Storage
 
+
+检查当前journal使用磁盘量
+
+journalctl --disk-usage
+清理方法可以采用按照日期清理，或者按照允许保留的容量清理
+
+journalctl --vacuum-time=2d
+journalctl --vacuum-size=500M
+
+
 systemctl restart systemd-journald
 
 - [参考链接](https://blog.steamedfish.org/posts/2019/06/systemd-journal-%E5%8D%A0%E7%94%A8%E5%86%85%E5%AD%98%E7%9A%84%E9%97%AE%E9%A2%98/)

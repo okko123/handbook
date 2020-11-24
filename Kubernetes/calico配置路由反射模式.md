@@ -33,18 +33,31 @@
    
    calico apply -f infra01_node.yaml
    ```
-3. 配置BGPPeer资源，告诉Node节点路由反射器。
-   ```bash
-   cat << EOF | calicoctl create -f -
-   apiVersion: projectcalico.org/v3
-   kind: BGPPeer
-   metadata:
-     name: peer-to-rrs
-   spec:
-     nodeSelector: !has(i-am-a-route-reflector)
-     peerSelector: has(i-am-a-route-reflector)
-   EOF
-   ```
+3. 配置BGPPeer资源，告诉Node节点路由反射器。根据实际选择单RR，还是双RR
+   - 单RR节点部署
+     ```bash
+     cat << EOF | calicoctl create -f -
+     apiVersion: projectcalico.org/v3
+     kind: BGPPeer
+     metadata:
+       name: peer-to-rrs
+     spec:
+       nodeSelector: !has(i-am-a-route-reflector)
+       peerSelector: has(i-am-a-route-reflector)
+     EOF
+     ```
+   - 多RR节点部署（多个主机节点作为RR）
+     ```bash
+     cat << EOF | calicoctl create -f -
+     apiVersion: projectcalico.org/v3
+     kind: BGPPeer
+     metadata:
+       name: rrs-mesh
+     spec:
+       nodeSelector: has(i-am-a-route-reflector)
+       peerSelector: has(i-am-a-route-reflector)
+    EOF
+     ```
 4. 查看bgppeer
 ```bash
 calicoctl get bgppeers

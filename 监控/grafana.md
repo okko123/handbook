@@ -15,6 +15,9 @@ service grafana-server restart
 ## 出现Panel plugin not found: grafana-piechart-panel
 - 执行grafana-cli plugins install grafana-piechart-panel，安装插件
 - 重启grafana，kubectl -n monitoring rollout restart deploy grafana
+
+## 重置grafana的密码
+- grafana-cli admin reset-admin-password admin
 [参考连接]
 https://cloud.tencent.com/developer/article/1027332
 https://github.com/yangcvo/Grafana

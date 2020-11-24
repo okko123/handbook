@@ -27,6 +27,8 @@
 * 获取集群pod、service的CIDR记录
   * kubectl cluster-info dump | grep -m 1 service-cluster-ip-range
   * kubectl cluster-info dump | grep -m 1 cluster-cidr
+* 修改deployment的副本数量
+  * kubectl scale deployment.v1.apps/deployment-name --replicas=1 -n namespace
 ## kubernetes 污点使用
 * kubectl taint node [node] key=value[effect]   
   * 其中[effect] 可取值: [ NoSchedule | PreferNoSchedule | NoExecute ]
@@ -48,3 +50,9 @@
 ## 参考链接
 * http://docs.kubernetes.org.cn/537.html
 * https://kubernetes.io/docs/concepts/services-networking/ingress/
+
+
+
+ kubectl create secret generic regcred --from-file=.dockerconfigjson=/root/.docker/config.json --type=kubernetes.io/dockerconfigjson -n qdm
+
+kubectl create configmap b2b-web-config --from-file=b2b-web.conf -n qdm

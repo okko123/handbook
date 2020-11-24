@@ -11,3 +11,5 @@ docker push 192.168.1.1/jdk/REPOSITORY[:TAG]
 
 ### docker 删除无效tag
 docker rmi docker_images
+
+docker system prune -a

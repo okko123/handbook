@@ -43,6 +43,31 @@ PUT /my_index/_settings
 #合并段(segments)
 POST /my_index/_forcemerge?max_num_segments=1
 
+#重建索引
+curl -XPOST -H "Content-Type: application/json" http://127.0.0.1:9200/_reindex?wait_for_completion=false -d '
+{
+  "source": {
+    "index": "teambition"
+  },
+  "dest": {
+    "index": "teambition_20180328"
+  },
+  "script": {...}
+}
+'
+POST /_reindex?wait_for_completion=false
+{
+  "source": {
+    "index": "teambition"
+  },
+  "dest": {
+    "index": "teambition_20180328"
+  },
+  "script": {...}
+}
+
+#查看任务信息
+GET /_tasks/{taskID}可以看到重建进程，其中包含耗时，剩余doc数量等信息
 ```
 ## 模板
 ```json

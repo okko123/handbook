@@ -79,12 +79,22 @@ prom/prometheus:v2.19.2 \
    systemctl enable mysqld_exporter
    ```
 
-   ## 在Kubernetes中部署Prometheus
-   - coreos提供的[部署文档](https://github.com/coreos/kube-prometheus)，必须注意：release版本有适配的指定版本的Kubernetes
-   - 以1.18为例：
-     ```bash
-     git clone https://github.com/coreos/kube-prometheus.git
-     #必须等待所有pods创建完毕，才能进行下一步操作
-     kubectl create -f manifests/setup
-     kubectl create -f manifests
-     ```
+### 在Kubernetes中部署Prometheus
+- coreos提供的[部署文档](https://github.com/coreos/kube-prometheus)，必须注意：release版本有适配指定版本的Kubernetes
+- 以1.18为例：
+  ```bash
+  git clone https://github.com/coreos/kube-prometheus.git
+  #必须等待所有pods创建完毕，才能进行下一步操作
+  kubectl create -f manifests/setup
+  kubectl create -f manifests
+  ```
+
+### 修改prometheus的数据保存时间
+- 修改k8s部署的Prometheus的数据保存时间，修改配置。
+  ```bash
+  # 在spec下添加，retention: 30d，配置保存数据时间为30天
+  kubectl edit prometheus -n monitoring k8s
+  ```
+https://github.com/prometheus-operator/prometheus-operator/blob/0e6ed120261f101e6f0dc9581de025f136508ada/Documentation/prometheus.md
+- 修改Prometheus的启动参数
+  - 在启动参数中添加--storage.tsdb.retention.time=STORAGE.TSDB.RETENTION.TIME，指定保留数据的时间长度。默认保存15天，支持的单位U: y, w, d, h, m, s, ms.

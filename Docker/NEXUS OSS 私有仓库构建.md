@@ -76,8 +76,15 @@
    ```bash
    docker login 192.168.1.1:7709
    ```
+### 在NEXUS OSS中清理镜像
+1. 使用docker API / Nexus REST API / UI 页面删除对应的镜像，以上操作在nexus中，镜像被标记删除。并不是否磁盘空间
+2. 在nexus的task中添加以下2个任务，并执行后，才会释放空间
+   1. Configure and run the 'Docker - Delete unused manifests and images' task to delete orphaned docker layers.
+   2. Configure and run the 'Admin - Compact blob store' task to reclaim disk space from the blob store for any assets already marked soft-deleted, including the Docker related ones created using options in this article.
 ### 参考资料
 - https://help.sonatype.com/repomanager3/installation/run-as-a-service#RunasaService-systemd
 - [官方文档，配置ssl](https://help.sonatype.com/repomanager3/system-configuration/configuring-ssl#ConfiguringSSL-InboundSSL-ConfiguringtoServeContentviaHTTPS)
 - [如何把PEM格式证书转换成JKS格式](https://www.jianshu.com/p/7e5917604c2d)
 - [从jks证书中提取公钥和私钥（jks证书转pem证书）](https://www.jianshu.com/p/ba35c7f47d8a)
+- [使用 Nexus OSS 为 Docker 镜像提供代理/缓存功能](https://jenkins-zh.github.io/wechat/articles/2020/05/2020-05-13-using-nexus-oss-as-a-proxy-cache-for-docker-images/)
+- [How to delete docker images from Nexus Repository Manager](https://support.sonatype.com/hc/en-us/articles/360009696054-How-to-delete-docker-images-from-Nexus-Repository-Manager)
