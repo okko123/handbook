@@ -23,6 +23,13 @@ docker system prune -a
 ## 查看docker空间占用
 docker system df -v
 
+## Dockerfile: ENTRYPOINT和CMD的区别
+[参考连接-1](https://zhuanlan.zhihu.com/p/30555962)
+
+## docker使用entrypoint执行时报permission denied错误
+问题在于用户没有文件的执行权限。解决方法：将sh作为ENTRYPOINT数组的第一个参数
+ENTRYPOINT ["sh", "./entrypoint.sh"]
+
 [参考链接-1](https://stackoverflow.com/questions/39078715/specify-max-log-json-file-size-in-docker-compose)
 [参考链接-2](https://colobu.com/2018/10/22/no-space-left-on-device-for-docker/)
 [参考链接-3](https://success.docker.com/article/no-space-left-on-device-error)

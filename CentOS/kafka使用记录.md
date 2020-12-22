@@ -1,5 +1,14 @@
 #kafka 使用记录
 
+### 查看消费数据
+1. 查看所有组：./kafka-consumer-groups.sh --bootstrap-server kafka-1.default.svc.cluster.local:9092 --list
+2. 查看消费情况：./kafka-consumer-groups.sh --describe --bootstrap-server kafka-1.default.svc.cluster.local:9092 --group usercenter
+   - 参数解释：
+   --describe  显示详细信息
+   --bootstrap-server 指定kafka连接地址
+   --group 指定组
+   注意：--group指定的组必须存在才行！可以用上面的--list命令来查看
+
 ### 修改topic的partitions
 ./kafka-topics.sh --zookeeper vlnx111122:2181 --alter --topic test --partitions 6
 ### 扩容、删除机器
@@ -55,3 +64,4 @@ topic为test目前在broker id为1,2,3的机器上，现又添加了两台机器
 
   ## 参考连接
   - [kafka重新分配partition](https://wzktravel.github.io/2015/12/31/kafka-reassign/)
+  - [kafka查看消费数据](https://cloud.tencent.com/developer/article/1589121)

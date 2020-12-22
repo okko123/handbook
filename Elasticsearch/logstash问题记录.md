@@ -53,6 +53,11 @@ output{
 - 使用dissect filter替换grok
 - 由于不能跳过，只能在logstash的grok中调整grok_timeout的时间
 
+## 添加systemd的启动脚本
+- 修改config/startup.options文件，修改java、elasticsearch home的配置
+- 执行bin/system-install [startup.options dir] systemd；生成systemd的启动脚本
+- 设置logstash自启动；systemctl enable logstash
+
 ## 参考连接
 - [es dissect filter的官网信息](https://www.elastic.co/guide/en/logstash/current/plugins-filters-dissect.html)
 - [grok_timeout配置方法](https://www.elastic.co/guide/en/logstash/current/plugins-filters-grok.html#plugins-filters-grok-timeout_millis)

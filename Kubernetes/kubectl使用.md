@@ -51,8 +51,15 @@
 * http://docs.kubernetes.org.cn/537.html
 * https://kubernetes.io/docs/concepts/services-networking/ingress/
 
+## 通过shell执行kubectl exec并在对应pod容器内执行shell命令
+kubectl exec -it <podName> -c <containerName> -n <namespace> -- shell comand
+创建文件
+kubectl exec -it <podname> -c <container name> -n <namespace> -- touch /usr/local/testfile
+
+需要注意的是：shell命令前，要加 -- 号，不然shell命令中的参数，不能识别
 
 
- kubectl create secret generic regcred --from-file=.dockerconfigjson=/root/.docker/config.json --type=kubernetes.io/dockerconfigjson -n qdm
+
+kubectl create secret generic regcred --from-file=.dockerconfigjson=/root/.docker/config.json --type=kubernetes.io/dockerconfigjson -n qdm
 
 kubectl create configmap b2b-web-config --from-file=b2b-web.conf -n qdm

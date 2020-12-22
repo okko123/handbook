@@ -43,7 +43,10 @@ net.ipv6.conf.default.disable_ipv6 = 1
 
 ```
 
+## file-max / file-nr
+cat /proc/sys/fs/file-max；这个文件决定了系统级别所有进程可以打开的文件描述符的数量限制，如果内核中遇到VFS: file-max limit <number> reached的信息，那么就提高这个值。
 
+cat /proc/sys/fs/file-nr；这个是一个状态指示的文件，一共三个值，第一个代表全局已经分配的文件描述符数量，第二个代表自由的文件描述符（待重新分配的），第三个代表总的文件描述符的数量。
 ## 参考连接
 * [内核sysctl手册说明](https://www.kernel.org/doc/Documentation/networking/ip-sysctl.txt)
 * [内核参数查询](https://sysctl-explorer.net/)

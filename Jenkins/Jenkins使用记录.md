@@ -9,7 +9,7 @@
 
 
 
-## 重置Jenkins的build序号
+### 重置Jenkins的build序号
 在Jenkins的系统管理 - 脚本命令行中执行
 item = Jenkins.instance.getItemByFullName("your-job-name-here")
 //THIS WILL REMOVE ALL BUILD HISTORY
@@ -17,3 +17,46 @@ item.builds.each() { build ->
   build.delete()
 }
 item.updateNextBuildNumber(1)
+
+### 配置smtp发送邮件
+系统管理 -> 配置
+- 配置：系统管理员邮件地址
+  ![](img/jenkins-2.png)
+- 邮件通知：配置SMTP服务器地址、邮箱后缀、用户名、密码、SMTP端口
+  ![](img/jenkins-1.png)
+- 在pipeline中配置邮件发送
+  ```bash
+  pipeline { 
+      agent any 
+  
+      parameters {
+          省略内容……
+      }
+      environment {
+          省略内容……
+      }
+      stages {
+          省略内容……
+      }
+      post {
+          success {
+              emailext (
+                  subject: "SUCCESSFUL: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                  body: """<p>SUCCESSFUL: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]':</p>
+                      <p>Check console output at "<a href="${env.BUILD_URL}">${env.JOB_NAME} [${env.BUILD_NUMBER}]</a>"</p>""",
+                  to: "user1@qq.com,user2@qq.com",
+                  from: "admin@sina.com"
+              )
+          }
+          failure {
+              emailext (
+                  subject: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                  body: """<p>FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]':</p>
+                      <p>Check console output at "<a href="${env.BUILD_URL}">${env.JOB_NAME} [${env.BUILD_NUMBER}]</a>"</p>""",
+                  to: "user1@qq.com,user2@qq.com",
+                  from: "admin@sina.com"
+              )
+          }
+      }
+  }
+  ```

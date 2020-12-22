@@ -31,7 +31,7 @@
        ipv4Address: 192.168.0.3/16
        routeReflectorClusterID: 224.0.0.1
    
-   calico apply -f infra01_node.yaml
+   calicoctl apply -f infra01_node.yaml
    ```
 3. 配置BGPPeer资源，告诉Node节点路由反射器。根据实际选择单RR，还是双RR
    - 单RR节点部署
