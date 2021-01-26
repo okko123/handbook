@@ -73,3 +73,6 @@ netstat -natp | grep bird
 - [H3C交换机配置OSPF导入外部路由](https://www.h3c.com/cn/d_201802/1065959_30005_0.htm#_Toc505352341)
 - [H3C交换机配置BGP与IGP交互配置](https://www.h3c.com/cn/d_201802/1065961_30005_0.htm#_Toc505352832)
 - [Kubernetes网络组件之Calico策略实践(BGP、RR、IPIP)](https://blog.51cto.com/14143894/2463392?source=drh)
+- [calico官网配置文档](https://docs.projectcalico.org/archive/v3.17/networking/bgp#route-reflectors)
+- [calico官网配置BGP路由文档](https://docs.projectcalico.org/archive/v3.16/reference/resources/bgpconfig)
+- [Kubernetes网络之Calico](https://www.cnblogs.com/ssgeek/p/13194687.html)

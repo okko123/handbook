@@ -1,17 +1,26 @@
 # kubernetes版本升级
 ## 使用kubeadm进行集群升级
+- 在第一个控制平面节点上，升级 kubeadm :
+  ```bash
+  $ yum install update kubeadm-1.18.8 -y
+  ```
 - 检查k8s集群当前版本
   ```bash
-  kubeadm version
+  $ kubeadm version
   kubeadm version: &version.Info{Major:"1", Minor:"18", GitVersion:"v1.18.3", GitCommit:"2e7996e3e2712684bc73f0dec0200d64eec7fe40", GitTreeState:"clean", BuildDate:"2020-05-20T12:49:29Z", GoVersion:"go1.13.9", Compiler:"gc", Platform:"linux/amd64"}
 
-  kubectl version
+  $ kubectl version
   Client Version: version.Info{Major:"1", Minor:"18", GitVersion:"v1.18.3", GitCommit:"2e7996e3e2712684bc73f0dec0200d64eec7fe40", GitTreeState:"clean", BuildDate:"2020-05-20T12:52:00Z", GoVersion:"go1.13.9", Compiler:"gc", Platform:"linux/amd64"}
   Server Version: version.Info{Major:"1", Minor:"18", GitVersion:"v1.18.3", GitCommit:"2e7996e3e2712684bc73f0dec0200d64eec7fe40", GitTreeState:"clean", BuildDate:"2020-05-20T12:43:34Z", GoVersion:"go1.13.9", Compiler:"gc", Platform:"linux/amd64"}
   ```
+- 腾空控制平面节点
+  ```bash
+  # 将 <cp-node-name> 替换为你自己的控制面节点名称
+  kubectl drain <cp-node-name> --ignore-daemonsets
+  ```
 - 检查哪些版本可用于升级并验证当前群集是否可升级
   ```bash
-  kubeadm upgrade plan
+  $ kubeadm upgrade plan
   [upgrade/config] Making sure the configuration is correct:
   [upgrade/config] Reading configuration from the cluster...
   [upgrade/config] FYI: You can look at this config file with 'kubectl -n kube-system get cm kubeadm-config -oyaml'
@@ -51,9 +60,16 @@
 - 升级集群，在控制节点上执行
   ```bash
   kubeadm upgrade apply v1.18.6
-  ```
 
+  # 在拥有多个控制节点的集群上。在其他控制节点上执行，进行更新操作
+  kubeadm upgrade node
+  ```
+- 升级 kubelet 和 kubectl
+  ```bash
+  yum install kubectl-1.18.8 kubelet-1.18.8 -y
+  ```
 ---
 ## 参考信息
 - [Kubernetes 版本升级](https://www.jianshu.com/p/e4c14880a9ba)
+- [官方文档](https://kubernetes.io/zh/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade)
   

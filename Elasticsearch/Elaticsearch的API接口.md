@@ -100,3 +100,7 @@ GET /_cluster/settings
 #节点信息
 GET /_cat/nodes
 ```
+
+---
+## 参考信息
+[Elasticsearch Reindex性能提升10倍+实战](https://blog.csdn.net/laoyang360/article/details/81589459)

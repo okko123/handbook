@@ -63,3 +63,57 @@ filebeat-lvk51                              1/1       NodeLost   66         24d 
   uname -r
   4.4.218-1.el7.elrepo.x86_64
   ```
+
+## 补坑，添加controller-manager、scheduler的svc
+```bash
+cat > svc.yaml <<EOF
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: kube-system
+  name: kube-controller-manager
+  labels:
+    k8s-app: kube-controller-manager
+spec:
+  selector:
+    component: kube-controller-manager
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - name: https-metrics
+    port: 10257
+    targetPort: 10257
+    protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: kube-system
+  name: kube-scheduler
+  labels:
+    k8s-app: kube-scheduler
+spec:
+  selector:
+    component: kube-scheduler
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - name: https-metrics
+    port: 10259
+    targetPort: 10259
+    protocol: TCP
+EOF
+
+kubectl apply -f svc.yaml
+
+#修改controller-manager、scheduler的配置文件
+sed -i 's|bind-address=127.0.0.1|bind-address=0.0.0.0|g' /etc/kubernetes/manifests/kube-controller-manager.yaml
+sed -i 's|bind-address=127.0.0.1|bind-address=0.0.0.0|g' /etc/kubernetes/manifests/kube-scheduler.yaml
+
+#检查10257、10259端口的监听情况
+ss -nlt|grep 1025
+```
+
+---
+# 参考连接
+- [容器云平台No.7~kubernetes监控系统prometheus-operator](https://zhuanlan.zhihu.com/p/258344576)

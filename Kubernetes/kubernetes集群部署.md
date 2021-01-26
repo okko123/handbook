@@ -14,10 +14,12 @@
    exclude=kubelet kubeadm kubectl
    EOF
    
-   VERSION="1.17.4"
+   VERSION="1.18.8"
    setenforce 0
    sed -i 's/^SELINUX=enforcing$/SELINUX=disabled/' /etc/selinux/config
-   yum install -y kubelet-${VERSION} kubeadm-${VERSION} kubectl-${VERSION} docker ipvsadm ipset --disableexcludes=kubernetes
+   yum install -y kubelet-${VERSION} kubeadm-${VERSION} kubectl-${VERSION} ipvsadm ipset --disableexcludes=kubernetes
+   VERSION="19.03.12-3.el7"
+   yum install -y docker-ce-$VERSION docker-ce-cli-$VERSION
    systemctl daemon-reload
    systemctl enable --now kubelet docker
    

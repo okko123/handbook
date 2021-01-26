@@ -63,3 +63,40 @@ kubectl exec -it <podname> -c <container name> -n <namespace> -- touch /usr/loca
 kubectl create secret generic regcred --from-file=.dockerconfigjson=/root/.docker/config.json --type=kubernetes.io/dockerconfigjson -n qdm
 
 kubectl create configmap b2b-web-config --from-file=b2b-web.conf -n qdm
+
+
+获取指定namespace中，deployment的镜像版本
+for i in `kubectl get deployment -n namespace --no-headers|awk '{print $1}'`
+do
+    kubectl get deployment -n namespace $i -o jsonpath='{.spec.template.spec.containers[0].image}'
+    echo " "
+done
+
+更新指定namespace中，deployment的镜像版本
+#需要先把镜像版本导入到images.txt的文件中
+ 
+cat > images.txt<<EOF
+www.baidu.com:9091/springcloud/abc-service:qa-merge-35
+www.baidu.com:9091/springcloud/bcd-service:qa-gray-112
+www.baidu.com:9091/springcloud/web:qa-gray-76
+EOF
+ 
+for i in `kubectl get deployment -n namespace --no-headers|awk '{print $1}'`
+do
+    VERSION=`grep $i images.txt`
+    echo $VERSION || echo "no version"
+    kubectl set image -n namespace deployment/${i} ${i}=${VERSION}
+done
+
+更新指定namespace中，deployment的副本数量
+for job in `kubectl get deployment -n namespace --no-headers|awk '{print $1}'`;
+do
+    kubectl scale deployment.v1.apps/$job --replicas=0 -n namespace
+done
+
+重启指定deployment下的容器
+
+for job in `kubectl get deployment -n namespace --no-headers|awk '{print $1}'`;
+do
+    kubectl -n namespace rollout restart deploy $job
+done
