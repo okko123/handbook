@@ -100,3 +100,16 @@ for job in `kubectl get deployment -n namespace --no-headers|awk '{print $1}'`;
 do
     kubectl -n namespace rollout restart deploy $job
 done
+
+
+查看deployment版本
+kubectl rollout history deployment.v1.apps/nginx-deployment -n namespace
+
+# 修改terminationGracePeriodSeconds
+cat > patch.yaml <<EOF
+spec:
+  template:
+    spec:
+      terminationGracePeriodSeconds: 45
+EOF
+kubectl patch deployment deploymentname -n namespace --patch "$(cat patch.yaml)"

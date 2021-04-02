@@ -45,6 +45,9 @@ logchange 0.5
 bindaddress 192.168.1.2
 ratelimit interval 1 burst 16
 EOF
+
+#查看同步状态
+chronyc sources -v
 ```
 
 * 参考资料

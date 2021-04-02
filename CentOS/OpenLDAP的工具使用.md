@@ -179,6 +179,11 @@ ldapsearch -Q -LLL -Y EXTERNAL -H ldapi:/// -b cn=config dn
    dn: uid=john,ou=People,dc=example,dc=com
    memberOf: cn=mygroup,ou=groups,dc=example,dc=com
    ```
+
+
+ldapwhoami -H ldap:// -x -ZZ
+
+
 ### 参考信息
 - [配置 OpenLDAP Pasword policy (ppolicy)](https://blog.csdn.net/cuiaamay/article/details/52438777)
 - [How to enable MemberOf using OpenLDAP](https://www.adimian.com/blog/2014/10/how-to-enable-memberof-using-openldap/)

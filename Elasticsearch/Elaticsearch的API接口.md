@@ -99,8 +99,18 @@ GET /_cluster/settings
 
 #节点信息
 GET /_cat/nodes
+
+#设置监控索引的保留天数。
+PUT /_cluster/settings
+{"persistent": {"xpack.monitoring.history.duration":"2d"}}
+
+# 强制段合并
+https://www.elastic.co/guide/en/elasticsearch/reference/6.8/indices-forcemerge.html
+POST /index_name/_forcemerge?only_expunge_deletes=false&max_num_segments=1&flush=true
 ```
+
 
 ---
 ## 参考信息
 [Elasticsearch Reindex性能提升10倍+实战](https://blog.csdn.net/laoyang360/article/details/81589459)
+[配置Monitoring监控日志](https://www.alibabacloud.com/help/zh/doc-detail/68017.htm)
