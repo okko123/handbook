@@ -36,7 +36,7 @@ tar xf canal.deployer-1.1.4.tar.gz
   复制样例进行修改: cp example/instance.properties member/instance.properties
   修改数据库信息，ip、用户名、密码
   修改mq配置: canal.mq.topic、canal.mq.partition、canal.instance.filter.regex、canal.mq.partitionHash
-
+  注意，canal.mq.partition需要与rocketmq的topic的分片数量一致；关闭tsdb
 
   ### Canal和Zookeeper对应节点的关系
   ```bash

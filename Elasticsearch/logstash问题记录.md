@@ -52,12 +52,22 @@ output{
 - CPU使用率高的最终原因是传来的日志格式不能匹配，所以grok就会找默认的n多正则，一直到超时(貌似默认30秒)，这个时间内CPU就会特别繁忙。
 - 使用dissect filter替换grok
 - 由于不能跳过，只能在logstash的grok中调整grok_timeout的时间
-
 ## 添加systemd的启动脚本
 - 修改config/startup.options文件，修改java、elasticsearch home的配置
 - 执行bin/system-install [startup.options dir] systemd；生成systemd的启动脚本
 - 设置logstash自启动；systemctl enable logstash
+## logstash 安装插件
+- 执行bin/plugin install logstash-output-webhdfs。但在国内由于不可抗拒的原因，一般会出现：ERROR: Something went wrong when installing logstash-output-webhdfs, message: Net::OpenTimeout。通过修改gem源来绕过
+  ```bash
+  # rpm安装的logstash的home目录为/usr/share/logstash/
+  vim /usr/share/logstash/Gemfile
+  将source "https://rubygems.org"替换为
+  source "https://repo.huaweicloud.com/repository/rubygems/"
+  保存退出，重新安装即可
+  ```
 
+
+---
 ## 参考连接
 - [es dissect filter的官网信息](https://www.elastic.co/guide/en/logstash/current/plugins-filters-dissect.html)
 - [grok_timeout配置方法](https://www.elastic.co/guide/en/logstash/current/plugins-filters-grok.html#plugins-filters-grok-timeout_millis)

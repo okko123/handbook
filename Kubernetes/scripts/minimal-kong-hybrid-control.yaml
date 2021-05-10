@@ -1,0 +1,105 @@
+# Basic configuration for Kong without the ingress controller, using the Postgres subchart
+# This installation does not create an Ingress or LoadBalancer Service for
+# the Admin API. It requires port-forwards to access without further
+# configuration to add them, e.g.:
+# kubectl port-forward deploy/your-deployment-kong 8001:8001
+
+image:
+  repository: kong
+  tag: "2.3"
+
+env:
+  prefix: /kong_prefix/
+  database: postgres
+  role: control_plane
+  cluster_cert: /etc/secrets/kong-cluster-cert/tls.crt
+  cluster_cert_key: /etc/secrets/kong-cluster-cert/tls.key
+  pg_host: 192.168.1.1
+  pg_user: kong
+  pg_password: kong
+  pg_port: 5432
+  pg_database: kong
+
+admin:
+  enabled: true
+  labels:
+    enable-metrics: "true"
+  http:
+    enabled: true
+    servicePort: 8001
+    containerPort: 8001
+
+cluster:
+  enabled: true
+  tls:
+    enabled: true
+    servicePort: 8005
+    containerPort: 8005
+
+proxy:
+  enabled: false
+
+secretVolumes:
+- kong-cluster-cert
+
+postgresql:
+  enabled: false
+
+ingressController:
+  enabled: true
+  installCRDs: false
+  env:
+    publish_service: kong/kong-dp-kong-proxy
+
+migrations:
+  preUpgrade: false
+  postUpgrade: false
+
+waitImage:
+  enabled: false
+
+namespace: kong
+
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: "100%"
+    maxUnavailable: "0%"
+
+resources:
+  limits:
+   cpu: 100m
+   memory: 256Mi
+  requests:
+   cpu: 100m
+   memory: 256Mi
+
+readinessProbe:
+  httpGet:
+    path: "/status"
+    port: status
+    scheme: HTTP
+  initialDelaySeconds: 5
+  timeoutSeconds: 5
+  periodSeconds: 10
+  successThreshold: 1
+  failureThreshold: 3
+
+livenessProbe:
+  httpGet:
+    path: "/status"
+    port: status
+    scheme: HTTP
+  initialDelaySeconds: 5
+  timeoutSeconds: 5
+  periodSeconds: 10
+  successThreshold: 1
+  failureThreshold: 3
+
+lifecycle:
+  preStop:
+    exec:
+      command: ["/bin/sh", "-c", "/bin/sleep 15 && kong quit"]
+
+serviceMonitor:
+  enabled: true

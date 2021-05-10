@@ -23,6 +23,11 @@ openssl s_client -connect poftut.com:443 -cipher RC4-SHA
 ## Debug SSL/TLS To The HTTPS
 openssl s_client -connect poftut.com:443 -tlsextdebug
 
+## 检测 SSL 证书过期时间
+echo | openssl s_client -servername $NAME -connect "$host":443 2>/dev/null | openssl x509 -noout -dates
+
+## 查看证书信息
+openssl x509 -in getssl.crt -noout -text
 ---
 ## 参考连接
 - [How To Use OpenSSL s_client To Check and Verify SSL/TLS Of HTTPS Webserver?](https://www.poftut.com/use-openssl-s_client-check-verify-ssltls-https-webserver/)

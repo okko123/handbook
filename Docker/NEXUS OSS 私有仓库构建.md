@@ -31,6 +31,10 @@
     systemctl daemon-reload
     systemctl start nexus
     systemctl enable nexus
+    
+    # 出现Please define INSTALL4J_JAVA_HOME to point to a suitable JVM 报错信息的处理方法
+    修改bin/nexus文件，修改 INSTALL4J_JAVA_HOME_OVERRIDE ， 指向JAVA_HOME即可解决问题
+
     ```
 ### 配置https
 - 创建Java Keystore file 文件路径：$data-dir/etc/ssl/keystore.jks

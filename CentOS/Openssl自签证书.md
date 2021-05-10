@@ -96,6 +96,7 @@ subjectKeyIdentifier = hash
 authorityKeyIdentifier = keyid,issuer
 keyUsage = critical, digitalSignature
 extendedKeyUsage = critical, OCSPSigning
+EOF
 ```
 ### 生成CA证书
 ```bash

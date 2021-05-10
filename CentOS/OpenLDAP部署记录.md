@@ -77,7 +77,9 @@ ldapmodify -Q -Y EXTERNAL -H ldapi:/// -f /etc/openldap/schema/nis.ldif
 ldapmodify -Q -Y EXTERNAL -H ldapi:/// -f /etc/openldap/schema/openldap.ldif
 ```
 ## 第三方工具
-自助修改ldap密码
+自助修改ldap密码，Self Service Password
+* https://ltb-project.org/doku.php
+查看用户信息，Service Desk
 * https://ltb-project.org/doku.php
 ---
 ## 参考连接

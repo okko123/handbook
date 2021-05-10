@@ -36,6 +36,24 @@
       Port 22
       IdentityFile ~/.ssh/id_rsa
       ProxyCommand ssh -W %h:%p server-b
+
+  Host bastion
+      User                   ec2-user
+      HostName               ###.###.###.###
+      ProxyCommand           none
+      IdentityFile           /path/to/ssh/key.pem
+      BatchMode              yes
+      PasswordAuthentication no
+  
+  Host *
+      ServerAliveInterval    60
+      TCPKeepAlive           yes
+      ProxyCommand           ssh -q -A ec2-user@###.###.###.### nc %h %p
+      ControlMaster          auto
+      ControlPath            ~/.ssh/mux-%r@%h:%p
+      ControlPersist         8h
+      User                   ansible
+      IdentityFile           /path/to/ssh/key.pem
   EOF
   ```
 ## 使用ssh建立隧道

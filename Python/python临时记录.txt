@@ -1,0 +1,20 @@
+python 获取指定文件夹下所有文件名
+os.walk可以用于遍历指定文件下所有的子目录、非目录子文件。
+import os
+filePath = '/data'
+for i,j,k in os.walk(filePath):
+    print(i,j,k)
+
+os.listdir()用于返回指定的文件夹下包含的文件或文件夹名字的列表，这个列表按字母顺序排序。
+import os
+filePath = '/data'
+os.listdir(filePath)
+
+使用pandas进行json2csv转换
+import pandas as pd
+df = pd.read_json (r'/data/json/test.json')
+删除指定列
+df = df.drop(columns="area")
+
+df.to_csv (r'/data/json/test.csv', index = None)
+
