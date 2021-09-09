@@ -2,7 +2,7 @@
 ## 使用kubeadm进行集群升级
 - 在第一个控制平面节点上，升级 kubeadm :
   ```bash
-  $ yum install update kubeadm-1.18.8 -y
+  $ yum update kubeadm-1.18.8 -y
   ```
 - 检查k8s集群当前版本
   ```bash
@@ -67,6 +67,27 @@
 - 升级 kubelet 和 kubectl
   ```bash
   yum install kubectl-1.18.8 kubelet-1.18.8 -y
+  systemctl daemon-reload
+  systemctl restart kubelet
+  ```
+### 更新工作节点
+- 升级kubeadm
+  ```bash
+  yum install -y kubeadm-1.18.8 --disableexcludes=kubernetes
+  ```
+- 腾空节点
+  ```bash
+  kubectl drain <node-to-drain> --ignore-daemonsets
+  ```
+- 升级 kubelet 配置
+  ```bash
+  kubeadm upgrade node
+  ```
+- 升级 kubelet 与 kubectl
+  ```bash
+  yum install -y kubelet-1.18.8 kubectl-1.18.8 --disableexcludes=kubernetes
+  systemctl daemon-reload
+  systemctl restart kubelet
   ```
 ---
 ## 参考信息

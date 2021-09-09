@@ -1,5 +1,23 @@
 ## PostgreSQL使用记录
-
+### 使用docker运行PostgreSQL
+```bash
+mkdir /data/pg-data
+cat > pg-composefile.yaml <<EOF
+version: "3.9"
+services:
+  postgres:
+    image: postgres:9.6.23-alpine3.14
+    container_name: kong-database
+    restart: always
+    ports:
+      - 5432:5432
+    volumes:
+      - /data/pg-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: mysecretpassword
+EOF
+```
+### 常用命令
 ```bash
 # 登录数据库，切换posgres用户
 su - postgres
@@ -13,6 +31,9 @@ CREATE DATABASE exampledb OWNER dbuser;
 
 # 将exampledb数据库的所有权限都赋予dbuser，否则dbuser只能登录控制台，没有任何数据库操作权限。
 GRANT ALL PRIVILEGES ON DATABASE testdb TO test;
+
+# 修改数据库用户密码
+ALTER USER postgres WITH PASSWORD 'postgres';
 ```
 ### 修改postgresql配置，配置完成后重启pg
 - 监听的IP，默认监听127.0.0.1

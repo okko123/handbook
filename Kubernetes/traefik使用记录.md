@@ -51,7 +51,23 @@ kubectl port-forward pod/pod_name --address 192.168.1.1 8888:9000 -n traefik
         responseForwarding:
           flushInterval: 100ms
   ```
-
+### 接入consul做服务发现
+- 在traefik的deployment中的spec.template.spec.containers.args添加
+  ```bash
+  kubectl edit deployment traefik -n traefik
+  - --providers.consulcatalog.endpoint.address=consul-ip
+  - --providers.consulcatalog.endpoint.datacenter=consul-datacenter
+  ```
+- 登录traefik面板检查。
+  ```bash
+  # 在k8s中通过port-forward 进行端口暴露
+  kubectl port-forward $(kubectl get pods --selector "app.kubernetes.io/name=traefik" --output=name) 9000:9000
+  访问 ip:9000/dashboard/
+  ```
+- 测试
+  ```bash
+  curl -H host:service-name http://traefik-ip:port
+  ```
   ---
 ## 参考文档
 - [官方文档-路由](https://docs.traefik.io/routing/routers/#configuration-example)

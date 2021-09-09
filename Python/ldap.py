@@ -80,7 +80,7 @@ def main():
     if len(sys.argv) == 3:
         username = sys.argv[1]
         groupname = sys.argv[2]
-        mail = '{}@qdama.cn'.format(username)
+        mail = '{}@abc.cn'.format(username)
 
         con = sqlite3.connect('LDAPuser.db')
         cur = con.cursor()
@@ -97,7 +97,7 @@ def main():
         usage()
 
 def usage():
-    print("{0} username department\nfor example:\npython3 {0} chenxuanxin 运维".format(sys.argv[0]))
+    print("{0} username department\nfor example:\npython3 {0} username 运维".format(sys.argv[0]))
 
 if __name__ == "__main__":
     main()

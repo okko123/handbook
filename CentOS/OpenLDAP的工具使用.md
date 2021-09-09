@@ -4,6 +4,7 @@ dn: olcDatabase={1}mdb,cn=config
 changetype: modify
 add: olcAccess
 olcAccess: to * by self write by * read
+olcAccess: to * by self write by anonymous auth by * read
 EOF
 ldapmodify -Q -Y EXTERNAL -H ldapi:/// -f add_access.ldif
 
@@ -179,11 +180,12 @@ ldapsearch -Q -LLL -Y EXTERNAL -H ldapi:/// -b cn=config dn
    dn: uid=john,ou=People,dc=example,dc=com
    memberOf: cn=mygroup,ou=groups,dc=example,dc=com
    ```
-
-
+   
 ldapwhoami -H ldap:// -x -ZZ
-
-
+## 主主模式、主从模式
+- 当主主节点或主从节点openldap的基础配置一致时，openldap会自动同步数据
+- 例如：清空从节点上的数据，然后从新接入，数据会自动从主节点上同步至从节点
+---
 ### 参考信息
 - [配置 OpenLDAP Pasword policy (ppolicy)](https://blog.csdn.net/cuiaamay/article/details/52438777)
 - [How to enable MemberOf using OpenLDAP](https://www.adimian.com/blog/2014/10/how-to-enable-memberof-using-openldap/)

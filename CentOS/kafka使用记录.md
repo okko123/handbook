@@ -1,4 +1,33 @@
 #kafka 使用记录
+### kafka集群部署
+1. 修改server.properties文件
+   - 每个kafka实例设置不同的broker.id
+   - listeners必须设置监听的IP地址，否则kafka会尝试使用主机名连接其他kafka实例
+   - 启用topic删除：auto.create.topics.enable=true
+   ```bash
+   cat > server.properties <<EOF
+   broker.id=2
+   listeners=PLAINTEXT://172.16.84.208:9092
+   num.network.threads=3
+   num.io.threads=8
+   socket.send.buffer.bytes=102400
+   socket.receive.buffer.bytes=102400
+   socket.request.max.bytes=104857600
+   log.dirs=/tmp/kafka-logs
+   num.partitions=1
+   num.recovery.threads.per.data.dir=1
+   offsets.topic.replication.factor=1
+   transaction.state.log.replication.factor=1
+   transaction.state.log.min.isr=1
+   log.retention.hours=168
+   log.segment.bytes=1073741824
+   log.retention.check.interval.ms=300000
+   zookeeper.connect=172.16.84.206:2181,172.16.84.207:2181,172.16.84.208:2181
+   zookeeper.connection.timeout.ms=18000
+   group.initial.rebalance.delay.ms=0
+   auto.create.topics.enable=true
+   EOF
+   ```
 
 ### 查看消费数据
 1. 查看所有组：./kafka-consumer-groups.sh --bootstrap-server kafka-1.default.svc.cluster.local:9092 --list

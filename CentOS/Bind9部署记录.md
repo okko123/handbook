@@ -74,7 +74,23 @@ EOF
 #创建区域文件
 cd /var/named
 cp named.empty named.test.com
-
+```bash
+cat > named.test.com<<EOF
+$TTL 86400
+@   IN  SOA     dns01.test.com. root.test.com. (
+        2011071001  ;Serial
+        3600        ;Refresh
+        1800        ;Retry
+        604800      ;Expire
+        86400       ;Minimum TTL
+)
+@       IN  NS          dns01.test.com.
+@       IN  PTR         fedora.local.
+dns01           IN  A   192.168.1.160
+client          IN  A   192.168.1.136
+160     IN  PTR         dns01.test.com.
+136     IN  PTR         client.test.com.
+EOF
 #启动前检查配置项是否正确
 named-checkconf
 named-checkzone "test.com" /var/named/named.test.com
