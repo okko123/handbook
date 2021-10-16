@@ -41,6 +41,13 @@
   ## 所有节点删除taint
   kubectl taint nodes --all node-role.kubernetes.io/master-
   ```
+## 切换集群上下文和命名空间
+实际上，我们也可以不使用额外的工具来切换上下文和命名空间，因为 kubectl 也提供了切换操作的命令，kubectl config命令就提供了用于编辑 kubeconfig 文件的功能，下面是一些基本用法：
+
+kubectl config get-contexts: 列出所有的 context
+kubectl config current-context: 获取当前的 context
+kubectl config use-context: 更改当前 context
+kubectl config set-context: 修改 context 的元素
 ## kubernetes pv和pvc使用记录
 * https://kubernetes.io/zh/docs/concepts/storage/volumes/#hostpath
 ## alphine系统使用笔记

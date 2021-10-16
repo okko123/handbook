@@ -24,6 +24,7 @@
      selector:
        app.kubernetes.io/instance: traefik
        app.kubernetes.io/name: traefik
+   EOF
    ```
 3. 修改clusterrole
    ```bash
