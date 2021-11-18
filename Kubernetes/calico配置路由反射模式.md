@@ -5,6 +5,18 @@
   - 192.168.0.15作为k8s集群的路由反射节点（rr节点）
 - ros节点:192.168.0.253
 ### 网络架构图![](img/k8s-bgp-1.png)
+0. 配置calicoctl的配置文件
+   ```bash
+   mkdir /etc/calico
+   cat > /etc/calico/calicoctl.cfg <<EOF
+   apiVersion: projectcalico.org/v3
+   kind: CalicoAPIConfig
+   metadata:
+   spec:
+     datastoreType: "kubernetes"
+     kubeconfig: "/root/.kube/config"
+   EOF
+   ```
 1. 关闭当前Calico Mesh模式
    ```bash
    cat << EOF | calicoctl create -f -
@@ -56,8 +68,8 @@
    metadata:
      name: peer-with-route-reflectors
    spec:
-     nodeSelector: all()
-     peerSelector: route-reflector == 'true'
+     nodeSelector: !has(route-reflector)
+     peerSelector: has(route-reflector)
    EOF
    ```
 5. 查看bgppeer

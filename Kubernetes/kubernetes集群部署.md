@@ -96,6 +96,14 @@
    # 手动审批 证书请求
    kubectl certificate approve csr-d6prp
    ```
+5. 控制节点添加
+   ```bash
+   # 上传证书到k8s集群，获取certificate-key
+   kubeadm init phase upload-certs --upload-certs
+   # 在新的添加控制节点执行
+   kubeadm join $LOAD_BALANCER_DNS:$LOAD_BALANCER_PORT --token 9vr73a.a8uxyaju799qwdjv --discovery-token-ca-cert-hash sha256:7c2e69131a36ae2a042a339b33381c6d0d43887e2de83720eff5359e26aec866 --control-plane --certificate-key f8902e114ef118304e561c3ecd4d0b543adc226b7a07f675f56564185ffe0c07
+   ```
+
 
 ### 官方文档
 * [api版本为v1beta2](https://godoc.org/k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/v1beta2)

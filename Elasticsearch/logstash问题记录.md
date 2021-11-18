@@ -48,6 +48,7 @@ output{
 }
 
 ```
+---
 ## 查阅资料
 - CPU使用率高的最终原因是传来的日志格式不能匹配，所以grok就会找默认的n多正则，一直到超时(貌似默认30秒)，这个时间内CPU就会特别繁忙。
 - 使用dissect filter替换grok
@@ -65,11 +66,59 @@ output{
   source "https://repo.huaweicloud.com/repository/rubygems/"
   保存退出，重新安装即可
   ```
+## logstash多个配置文件的使用
+- 因为 logstash 运行起来的时候，会将所有的配置文件合并执行。因此，每个 input 的数据都必须有一个唯一的标识，在 filter 和 output 时，通过这个唯一标识来实现过滤或者存储到不同的索引。
+- 通过多个pipeline来实现多配置文件。一个 pipeline 含有一个逻辑的数据流，它从 input 接收数据，并把它们传入到队列里，经过 worker 的处理，最后输出到 output。这个 output 可以是 Elasticsearch 或其它。
+- 举个例子：
+  - 配置文件a：a.conf
+    ```yml
+    input {
+        file {
+            path => "/data/logs/nginx-a.log"
+          	start_position => "beginning"
+            sincedb_path => "/dev/null"
+            type => "nginx"
+        }
+    }
 
+    output {
+       	elasticsearch {
+            index => "nginx-a" 
+        }
+    }
+    ```
+  - 配置文件b：b.conf
+    ```yml
+    input {
+        file {
+            path => "/data/logs/nginx-b.log"
+          	start_position => "beginning"
+            sincedb_path => "/dev/null"
+            type => "nginx"
+        }
+    }
 
+    output {
+       	elasticsearch {
+            index => "nginx-b"
+        }
+    }
+    ```
+  - 修改pipeline.yml文件。使用rpm安装logstsah，pipeline.yml位置在/etc/logstash/pipeline.yml
+    ```yml
+    - pipeline.id: nginx-a
+      pipeline.workers: 1
+      path.config: "/etc/logstash/conf.d/a.conf"
+
+    - pipeline.id: nginx-b
+      pipeline.workers: 1
+      path.config: "/etc/logstash/conf.d/b.conf"
+    ```
+  - 重启logstash：systemctl restart logstash。不同的配置文件，收集的日志将导入到不同的ES索引中
 ---
 ## 参考连接
 - [es dissect filter的官网信息](https://www.elastic.co/guide/en/logstash/current/plugins-filters-dissect.html)
 - [grok_timeout配置方法](https://www.elastic.co/guide/en/logstash/current/plugins-filters-grok.html#plugins-filters-grok-timeout_millis)
 - [参考连接](https://discuss.elastic.co/t/why-am-i-getting-groktimeout-for-a-my-simple-log/65847)
 - [logstash配置查询文档](https://www.elastic.co/guide/en/logstash/current/index.html)
+- [Logstash：多个配置文件（conf）](https://cloud.tencent.com/developer/article/1674717)

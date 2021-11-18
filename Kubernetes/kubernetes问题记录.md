@@ -67,4 +67,36 @@ nsenter -n --target <PID>
 Copy
 依赖宿主机的命名：kubectl, docker, nsenter, grep, head, sed
 ```
+### Pod 拓扑分布约束
+```yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mypod
+spec:
+  topologySpreadConstraints:
+    - maxSkew: <integer>
+      topologyKey: <string>
+      whenUnsatisfiable: <string>
+      labelSelector: <object>
+```
+- 你可以定义一个或多个 topologySpreadConstraint 来指示 kube-scheduler 如何根据与现有的 Pod 的关联关系将每个传入的 Pod 部署到集群中。字段包括：
+  - maxSkew 描述 Pod 分布不均的程度。这是给定拓扑类型中任意两个拓扑域中 匹配的 pod 之间的最大允许差值。它必须大于零。取决于 whenUnsatisfiable 的 取值，其语义会有不同。
+当 whenUnsatisfiable 等于 "DoNotSchedule" 时，maxSkew 是目标拓扑域 中匹配的 Pod 数与全局最小值之间可存在的差异。
+当 whenUnsatisfiable 等于 "ScheduleAnyway" 时，调度器会更为偏向能够降低 偏差值的拓扑域。
+  - topologyKey 是节点标签的键。如果两个节点使用此键标记并且具有相同的标签值， 则调度器会将这两个节点视为处于同一拓扑域中。调度器试图在每个拓扑域中放置数量 均衡的 Pod。
+whenUnsatisfiable 指示如果 Pod 不满足分布约束时如何处理：
+  - DoNotSchedule（默认）告诉调度器不要调度。
+  - ScheduleAnyway 告诉调度器仍然继续调度，只是根据如何能将偏差最小化来对 节点进行排序。
+  - labelSelector 用于查找匹配的 pod。匹配此标签的 Pod 将被统计，以确定相应 拓扑域中 Pod 的数量。 有关详细信息，请参考标签选择算符。
+
+
+- https://kubernetes.io/zh/docs/concepts/workloads/pods/pod-topology-spread-constraints/ 
+
+### kubernetes上报Pod已用内存不准问题分析
+- https://cloud.tencent.com/developer/article/1637682
+- 监控数据是采集的kubernetes上报的container_memory_working_set_bytes字段：
+- 分析kubernetes代码可以看到container_memory_working_set_bytes是取自cgroup memory.usage_in_bytes 与memory.stat total_inactive_file两者的差值:
+- 分析内核代码发现memory.usage_in_bytes的统计数据是包含了所有的file cache的， total_active_file和total_inactive_file都属于file cache的一部分，并且这两个数据并不是业务真正占用的内存，只是系统为了提高业务的访问IO的效率，将读写过的文件缓存在内存中，file cache并不会随着进程退出而释放，只会当容器销毁或者系统内存不足时才会由系统自动回收。
+---
 - [参考连接](https://imroc.io/posts/kubernetes/capture-packets-in-container/)

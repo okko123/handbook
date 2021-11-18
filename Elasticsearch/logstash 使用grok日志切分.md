@@ -1,4 +1,7 @@
 ## logstash 使用grok日志切分
+### grok 匹配日期时间
+(?<timestamp>%{YEAR}[./]%{MONTHNUM}[./]%{MONTHDAY} %{TIME})
+---
 ### logstash配置文件样例
 ```bash
 input {
