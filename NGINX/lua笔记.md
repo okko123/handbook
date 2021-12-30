@@ -1,5 +1,7 @@
 # lua笔记
-
+## 参数作用
+- init_by_lua_file
+- init_worker_by_lua
 ## nginx通过content_by_lua和content_by_lua_file来嵌入lua脚本
 ### content_by_lua，在nginx配置文件中嵌入lua代码
 - 修改nginx配置文件nginx.conf，重启nginx访问 http://localhost//hellolua 应该可以看到 Hello Lua.

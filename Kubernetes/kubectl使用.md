@@ -1,25 +1,25 @@
 ## kubectl工具使用
 * 创建资源：kubectl create
-    * configmap
-    * deployment
-    * namespace
-    * service
-    * secret
+  * configmap
+  * deployment
+  * namespace
+  * service
+  * secret
 * 获取信息：kubectl get;列出受支持的资源类型(kubectl api-resources)
-    * all
-    * configmaps (aka 'cm')
-    * deployments (aka 'deploy')
-    * endpoints (aka 'ep')
-    * ingresses (aka 'ing')
-    * jobs
-    * namespaces (aka 'ns')
-    * nodes (aka 'no')
-    * persistentvolumeclaims (aka 'pvc')
-    * persistentvolumes (aka 'pv')
-    * pods (aka 'po')
-    * secrets
-    * services (aka 'svc')
-    * certificatesigningrequests (aka 'csr')
+  * all
+  * configmaps (aka 'cm')
+  * deployments (aka 'deploy')
+  * endpoints (aka 'ep')
+  * ingresses (aka 'ing')
+  * jobs
+  * namespaces (aka 'ns')
+  * nodes (aka 'no')
+  * persistentvolumeclaims (aka 'pvc')
+  * persistentvolumes (aka 'pv')
+  * pods (aka 'po')
+  * secrets
+  * services (aka 'svc')
+  * certificatesigningrequests (aka 'csr')
 * 获取yaml配置文件帮助：kubectl explain
 * 删除资源：kubectl delete
   * pods
@@ -42,12 +42,14 @@
   kubectl taint nodes --all node-role.kubernetes.io/master-
   ```
 ## 切换集群上下文和命名空间
-实际上，我们也可以不使用额外的工具来切换上下文和命名空间，因为 kubectl 也提供了切换操作的命令，kubectl config命令就提供了用于编辑 kubeconfig 文件的功能，下面是一些基本用法：
-
-kubectl config get-contexts: 列出所有的 context
-kubectl config current-context: 获取当前的 context
-kubectl config use-context: 更改当前 context
-kubectl config set-context: 修改 context 的元素
+- 实际上，我们也可以不使用额外的工具来切换上下文和命名空间，因为 kubectl 也提供了切换操作的命令，kubectl config命令就提供了用于编辑 kubeconfig 文件的功能，下面是一些基本用法：
+  > kubectl config get-contexts: 列出所有的 context
+  
+  > kubectl config current-context: 获取当前的 context
+  
+  > kubectl config use-context: 更改当前 context
+  
+  > kubectl config set-context: 修改 context 的元素
 ## kubernetes pv和pvc使用记录
 * https://kubernetes.io/zh/docs/concepts/storage/volumes/#hostpath
 ## alphine系统使用笔记
@@ -57,66 +59,68 @@ kubectl config set-context: 修改 context 的元素
 ## 参考链接
 * http://docs.kubernetes.org.cn/537.html
 * https://kubernetes.io/docs/concepts/services-networking/ingress/
+---
+### 通过shell执行kubectl exec并在对应pod容器内执行shell命令
+   ```bash
+   # 需要注意的是：shell命令前，要加 -- 号，不然shell命令中的参数，不能识别
+   kubectl exec -it <podName> -c <containerName> -n <namespace> -- shell comand
 
-## 通过shell执行kubectl exec并在对应pod容器内执行shell命令
-kubectl exec -it <podName> -c <containerName> -n <namespace> -- shell comand
-创建文件
-kubectl exec -it <podname> -c <container name> -n <namespace> -- touch /usr/local/testfile
+   # 创建文件
+   kubectl exec -it <podname> -c <container name> -n <namespace> -- touch /usr/local/testfile
 
-需要注意的是：shell命令前，要加 -- 号，不然shell命令中的参数，不能识别
+   kubectl create secret generic regcred --from-file=.dockerconfigjson=/root/.docker/config.json --type=kubernetes.io/dockerconfigjson -n test
 
+   kubectl create configmap b2b-web-config --from-file=b2b-web.conf -n test
+   ```
+### 获取指定namespace中，deployment的镜像版本
+   ```bash
+   for i in `kubectl get deployment -n namespace --no-headers|awk '{print $1}'`
+   do
+       kubectl get deployment -n namespace $i -o jsonpath='{.spec.template.spec.containers   [0].image}'
+       echo " "
+   done
+   ```
+### 更新指定namespace中，deployment的镜像版本
+   ```bash
+   #需要先把镜像版本导入到images.txt的文件中
+    
+   cat > images.txt<<EOF
+   www.baidu.com:9091/springcloud/abc-service:qa-merge-35
+   www.baidu.com:9091/springcloud/bcd-service:qa-gray-112
+   www.baidu.com:9091/springcloud/web:qa-gray-76
+   EOF
+    
+   for i in `kubectl get deployment -n namespace --no-headers|awk '{print $1}'`
+   do
+       VERSION=`grep $i images.txt`
+       echo $VERSION || echo "no version"
+       kubectl set image -n namespace deployment/${i} ${i}=${VERSION}
+   done
+   ```
+### 更新指定namespace中，deployment的副本数量
+   ```bash
+   for job in `kubectl get deployment -n namespace --no-headers|awk '{print $1}'`;
+   do
+       kubectl scale deployment.v1.apps/$job --replicas=0 -n namespace
+   done
+   ```
+### 重启指定deployment下的容器
+   ```bash
+   for job in `kubectl get deployment -n namespace --no-headers|awk '{print $1}'`;
+   do
+       kubectl -n namespace rollout restart deploy $job
+   done
+   ```
+### 查看deployment版本
+- kubectl rollout history deployment.v1.apps/nginx-deployment -n namespace
 
-
-kubectl create secret generic regcred --from-file=.dockerconfigjson=/root/.docker/config.json --type=kubernetes.io/dockerconfigjson -n qdm
-
-kubectl create configmap b2b-web-config --from-file=b2b-web.conf -n qdm
-
-
-获取指定namespace中，deployment的镜像版本
-for i in `kubectl get deployment -n namespace --no-headers|awk '{print $1}'`
-do
-    kubectl get deployment -n namespace $i -o jsonpath='{.spec.template.spec.containers[0].image}'
-    echo " "
-done
-
-更新指定namespace中，deployment的镜像版本
-#需要先把镜像版本导入到images.txt的文件中
- 
-cat > images.txt<<EOF
-www.baidu.com:9091/springcloud/abc-service:qa-merge-35
-www.baidu.com:9091/springcloud/bcd-service:qa-gray-112
-www.baidu.com:9091/springcloud/web:qa-gray-76
-EOF
- 
-for i in `kubectl get deployment -n namespace --no-headers|awk '{print $1}'`
-do
-    VERSION=`grep $i images.txt`
-    echo $VERSION || echo "no version"
-    kubectl set image -n namespace deployment/${i} ${i}=${VERSION}
-done
-
-更新指定namespace中，deployment的副本数量
-for job in `kubectl get deployment -n namespace --no-headers|awk '{print $1}'`;
-do
-    kubectl scale deployment.v1.apps/$job --replicas=0 -n namespace
-done
-
-重启指定deployment下的容器
-
-for job in `kubectl get deployment -n namespace --no-headers|awk '{print $1}'`;
-do
-    kubectl -n namespace rollout restart deploy $job
-done
-
-
-查看deployment版本
-kubectl rollout history deployment.v1.apps/nginx-deployment -n namespace
-
-# 修改terminationGracePeriodSeconds
-cat > patch.yaml <<EOF
-spec:
-  template:
-    spec:
-      terminationGracePeriodSeconds: 45
-EOF
-kubectl patch deployment deploymentname -n namespace --patch "$(cat patch.yaml)"
+### 修改terminationGracePeriodSeconds
+  ```bash
+  cat > patch.yaml <<EOF
+  spec:
+    template:
+      spec:
+        terminationGracePeriodSeconds: 45
+  EOF
+  kubectl patch deployment deploymentname -n namespace --patch "$(cat patch.yaml)"
+  ```
