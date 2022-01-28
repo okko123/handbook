@@ -76,3 +76,6 @@
        matchNames:
        - traefik
    EOF
+
+   kubectl apply -f traefik-monitor.yaml
+   ```

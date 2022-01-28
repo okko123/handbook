@@ -34,3 +34,7 @@ ingressController:
 
 serviceMonitor:
   enabled: true
+
+dnsConfig:
+  searches:
+    - service.consul

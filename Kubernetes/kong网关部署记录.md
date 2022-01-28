@@ -16,6 +16,13 @@
   - 由于仅CP节点需要直接连接到数据库，因此可以大大减少数据库上的通信量。
   - 增强的安全性，一旦DP节点之一受到入侵，攻击者将无法影响Kong群集中的其他节点。
   - 易于管理，因为管理员只需与CP节点进行交互即可控制和监视整个Kong集群的状态
+### 当kong使用consul做服务发现时
+- 在kong-proxy的deployment中，在spec.template.spec字段下添加配置
+  ```bash
+  dncConfig:
+    searches:
+      - service.consul
+  ```
 ### 在k8s集群中安装部署kong
 - 使用helm安装kong标准版，开启ingressController，helm版本3.5.3，命名空间为kong
   ```bash
@@ -54,7 +61,7 @@
     - Replace hybrid with your DP nodes' namespace and example-release-data with the name of the DP release.
     - 修改后的配置文件：[minimal-kong-hybrid-control.yaml](scripts/minimal-kong-hybrid-control.yaml)
       ```bash
-      ./helm  install kong-control kong/kong -f minimal-kong-hybrid-control.yaml --namespace kong
+      ./helm  /ml --namespace kong
       ```
   - 安装数据节点。修改cluster_control_plane，与control_plane进行通信。github中的样例：[minimal-kong-hybrid-data.yaml](https://github.com/Kong/charts/blob/main/charts/kong/example-values/minimal-kong-hybrid-data.yaml)
     - Note that the cluster_control_plane value will differ depending on your environment. control-plane-release-name will change to your CP release name, hybrid will change to whatever namespace it resides in. See Kubernetes' documentation on Service DNS for more detail.

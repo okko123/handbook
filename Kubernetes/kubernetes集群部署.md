@@ -47,6 +47,22 @@
    sed -i "/serviceSubnet:/a\  podSubnet: ${POD_CIDR}" ${CONFIG}
    kubeadm init --config ${CONFIG}
 
+   LOAD_BALANCER_DNS="slb.abc.cn"
+   LOAD_BALANCER_PORT="6443"
+   POD_CIDR="11.244.0.0/16"
+   SVC_CIDR="11.96.0.0/12"
+   VERSION="1.18.3"
+   IMAGE="registry.aliyuncs.com/google_containers"
+    
+   kubeadm init \
+   --control-plane-endpoint "$LOAD_BALANCER_DNS:$LOAD_BALANCER_PORT" \
+   --upload-certs \
+   --pod-network-cidr $POD_CIDR \
+   --service-cidr $SVC_CIDR \
+   --kubernetes-version $VERSION \
+   --image-repository $IMAGE
+
+
    #复制kubectl的配置文件
    mkdir -p $HOME/.kube
    sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config

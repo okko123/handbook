@@ -100,3 +100,14 @@ whenUnsatisfiable 指示如果 Pod 不满足分布约束时如何处理：
 - 分析内核代码发现memory.usage_in_bytes的统计数据是包含了所有的file cache的， total_active_file和total_inactive_file都属于file cache的一部分，并且这两个数据并不是业务真正占用的内存，只是系统为了提高业务的访问IO的效率，将读写过的文件缓存在内存中，file cache并不会随着进程退出而释放，只会当容器销毁或者系统内存不足时才会由系统自动回收。
 ---
 - [参考连接](https://imroc.io/posts/kubernetes/capture-packets-in-container/)
+
+### k8s用户
+- system:serviceaccounts代表serviceaccounts用户组
+- system:unauthenticated代表匿名用户组
+
+服务账户 的用户名前缀为 system:serviceaccount:，属于前缀为 system:serviceaccounts: 的用户组。
+
+说明：
+system:serviceaccount: （单数）是用于服务账户用户名的前缀；
+system:serviceaccounts: （复数）是用于服务账户组名的前缀。
+- [使用 RBAC 鉴权](https://kubernetes.io/zh/docs/reference/access-authn-authz/rbac/)
