@@ -21,6 +21,7 @@ ctr -n k8s.io i rm k8s.gcr.io/pause:3.2
 
 拉取镜像
 ctr -n k8s.io i pull -k k8s.gcr.io/pause:3.2
+ctr -n k8s.io image pull -u {username}:{password} --plain-http docker.xxx.cn:5000/maxfaith/miop_ui:development
 
 推送镜像
 ctr -n k8s.io i push -k k8s.gcr.io/pause:3.2

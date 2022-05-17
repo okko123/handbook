@@ -48,6 +48,38 @@ output{
 }
 
 ```
+# 使用logstash修改部分字段的内容
+> 修改order_status字段内容，判断内容为os.completed时，将内容改写为1；判断内容为os.refund时，将内容改写2
+```yaml
+input {
+    file {
+        path => ["/root/back.json"]
+        codec => "json"
+        start_position => "beginning"
+    }
+}
+
+filter {
+    translate {
+        override => true
+        field => "[order_status]"
+        destination => "[order_status]"
+        dictionary => {
+            "os.completed" => "1"
+            "os.refund" => "2"
+        }
+    }
+}
+
+output{
+    elasticsearch {
+        hosts => ["192.168.1.1:9200"]
+        index => "index-2019.12.26"
+        document_type => "doc"
+    }
+}
+
+```
 ---
 ## 查阅资料
 - CPU使用率高的最终原因是传来的日志格式不能匹配，所以grok就会找默认的n多正则，一直到超时(貌似默认30秒)，这个时间内CPU就会特别繁忙。
@@ -116,9 +148,31 @@ output{
     ```
   - 重启logstash：systemctl restart logstash。不同的配置文件，收集的日志将导入到不同的ES索引中
 ---
+## 修改Logstash的@timestamp字段为业务时间
+> Logstash在处理数据的时候，会自动生成一个字段@timestamp，默认该字段存储的是Logstash收到消息/事件(event)的时间
+> @timestamp字段是内置的，和之前说的一样，时间是Logstash收到消息的时间，而且注意使用的是UTC时间
+> 在filter块中，使用date插件，对@timestamp的内容进行覆盖；如果没有指定target，默认就是@timestamp字段
+```yaml
+filter {
+    grok {
+        match => {
+            "message" => "%{NUMBER:request_time}\|%{IP:ip}\|%{USERNAME:username}\|%{DATA:hostname}\|\[%{HTTPDATE:timestamp}\]\|"
+        }
+        remove_field => ["message"]
+    }
+
+    date {
+        match => [ "timestamp", "dd/MMM/yyyy:HH:mm:ss Z" ]
+        timezone => "Asia/Shanghai"
+    }
+}
+
+```
+---
 ## 参考连接
 - [es dissect filter的官网信息](https://www.elastic.co/guide/en/logstash/current/plugins-filters-dissect.html)
 - [grok_timeout配置方法](https://www.elastic.co/guide/en/logstash/current/plugins-filters-grok.html#plugins-filters-grok-timeout_millis)
 - [参考连接](https://discuss.elastic.co/t/why-am-i-getting-groktimeout-for-a-my-simple-log/65847)
 - [logstash配置查询文档](https://www.elastic.co/guide/en/logstash/current/index.html)
 - [Logstash：多个配置文件（conf）](https://cloud.tencent.com/developer/article/1674717)
+- [修改Logstash的@timestamp字段为业务时间](http://niyanchun.com/modify-attimestamp-field-in-logstash.html)

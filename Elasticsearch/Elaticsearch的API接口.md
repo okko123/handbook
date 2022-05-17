@@ -108,9 +108,21 @@ PUT /_cluster/settings
 https://www.elastic.co/guide/en/elasticsearch/reference/6.8/indices-forcemerge.html
 POST /index_name/_forcemerge?only_expunge_deletes=false&max_num_segments=1&flush=true
 ```
+## 管理API
+```json
+#获取任务
+GET /_tasks/<task_id>
+GET /_tasks
 
+#删除任务
+如果长时间运行的任务支持取消，可以使用取消任务 API 取消。 以下示例取消任务 oTUltX4IQMOUUVeiohTt8A:12345：
+POST _tasks/oTUltX4IQMOUUVeiohTt8A:12345/_cancel
 
+任务取消命令支持与列表任务命令相同的任务选择参数，因此可以同时取消多个任务。 例如，以下命令将取消在节点 nodeId1 和 nodeId2 上运行的所有重新索引任务。
+POST _tasks/_cancel?nodes=nodeId1,nodeId2&actions=*reindex
+```
 ---
 ## 参考信息
 [Elasticsearch Reindex性能提升10倍+实战](https://blog.csdn.net/laoyang360/article/details/81589459)
 [配置Monitoring监控日志](https://www.alibabacloud.com/help/zh/doc-detail/68017.htm)
+[Task management API](https://www.elastic.co/guide/en/elasticsearch/reference/current/tasks.html)
