@@ -18,3 +18,37 @@ df = df.drop(columns="area")
 
 df.to_csv (r'/data/json/test.csv', index = None)
 
+生成当天0点的时间戳
+import datetime
+now = datetime.datetime.now()
+
+midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
+midnight_ts = midnight.timestamp()
+
+检查https证书的过期时间
+import ssl
+import OpenSSL
+
+import datetime
+from pytz import timezone
+
+def get_ssl_expiry_date(host, port=443):
+    """ get notAfter data from server cert """
+    cert = ssl.get_server_certificate((host, port))
+    x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert)
+    return x509.get_notAfter().decode()
+
+# conf
+SRC_TZ = 'UTC'
+DST_TZ = 'Asia/Shanghai'
+
+def load_ssl_date(dt_string, pattern='%Y%m%d%H%M%SZ'):
+    """ convert ssl date from string to datetime obj """
+    src_tz = timezone(SRC_TZ)
+    dst_tz = timezone(DST_TZ)
+    dt = src_tz.localize(datetime.datetime.strptime(dt_string, pattern))
+    return dt.astimezone(tz=dst_tz)
+---
+### 参考信息
+- [使用Python检查ssl证书过期时间](https://knktc.com/2021/06/20/use-python-to-check-ssl-expiry-date/)
+- [Python脚本批量检查SSL证书过期时间](https://linuxeye.com/479.html)

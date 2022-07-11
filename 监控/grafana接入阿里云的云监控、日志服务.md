@@ -13,3 +13,5 @@ grafana 接入阿里云的云监控、日志服务
 ---
 - [对接Grafana](https://help.aliyun.com/document_detail/109434.html?spm=5176.22414175.sslink.1.648f403fbxKBx8)
 - [日志服务对接Grafana](https://help.aliyun.com/document_detail/60952.html)
+- [通过Grafana插件查看监控数据](https://www.alibabacloud.com/help/zh/cloudmonitor/latest/use-grafana-to-view-the-monitoring-data)
+- [云监控的指标](https://www.alibabacloud.com/help/zh/cloudmonitor/latest/appendix-1-metrics)

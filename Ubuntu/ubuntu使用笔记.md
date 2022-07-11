@@ -13,3 +13,23 @@
     - 方法一: watch -n 5 pkill -USR1 ^dd$
     - 方法二: watch -n 5 killall -USR1 dd
     - 方法三: while killall -USR1 dd; do sleep 5; done
+
+### ubuntu 安装v2ray
+1.下载v2ray的二进制包
+2.修改config.json文件
+3.v2ray --config config.json启动
+
+- docker使用socket5代理
+  ```bash
+  mkdir -p /etc/systemd/system/docker.service.d/
+  cat > /etc/systemd/system/docker.service.d/http-proxy.conf <<EOF
+  [Service]
+  Environment="HTTP_PROXY=socks5://127.0.0.1:10808/" "HTTPS_PROXY=socks5://127.0.0.1:10808/"
+  EOF
+  
+  systemctl daemon-reload
+  systemctl restart docker
+  ```
+---
+### 参考连接
+- [V2Ray 配置指南](https://toutyrater.github.io/advanced/outboundproxy.html)

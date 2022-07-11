@@ -141,17 +141,61 @@ ceph config set mgr mgr/dashboard/server_addr 0.0.0.0
 ceph mgr services
 ```
 ## 设置用户与密码
+```bash
 echo 123@456Admin > pass.txt
 ceph dashboard ac-user-create admin -i pass.txt administrator
+```
 ---
 ### 清理磁盘信息
+```bash
 dd if=/dev/zero of=/dev/sdb bs=512K count=1
 reboot
 wipefs -a /dev/sdb
 
+清理磁盘的fstype
+wipefs -a /dev/sda
+lsblk -f
+
+DISK="/dev/sdb"
+sgdisk --zap-all $DISK
+dd if=/dev/zero of="$DISK" bs=1M count=100 oflag=direct,dsync
+partprobe $DISK
+```
+---
+### 用systemd 控制ceph
+1. 列出节点上所有的 ceph systemd units
+   ```bash
+   sudo systemctl status ceph\*.service ceph\*.target
+   ```
+2. 启动/停止所有守护进程
+   ```bash
+   sudo systemctl start ceph.target
+   sudo systemctl stop ceph\*.service ceph\*.target
+   ```
+3. 按照类型启动/停止所有守护进程
+   ```bash
+   sudo systemctl start ceph-osd.target
+   sudo systemctl start ceph-mon.target
+   sudo systemctl start ceph-mds.target
+
+   sudo systemctl stop ceph-mon\*.service ceph-mon.target
+   sudo systemctl stop ceph-osd\*.service ceph-osd.target
+   sudo systemctl stop ceph-mds\*.service ceph-mds.target
+   ```
+4. 启动/停止单个进程
+   ```bash
+   sudo systemctl start ceph-osd@{id}
+   sudo systemctl start ceph-mon@{hostname}
+   sudo systemctl start ceph-mds@{hostname}
+
+   sudo systemctl stop ceph-osd@{id}
+   sudo systemctl stop ceph-mon@{hostname}
+   sudo systemctl stop ceph-mds@{hostname}
+   ```
 ---
 - [apt install ceph](https://docs.ceph.com/en/quincy/install/get-packages/)
 - [CEPH RELEASES (INDEX)](https://docs.ceph.com/en/quincy/releases/index.html)
 - [CEPH DASHBOARD](https://docs.ceph.com/en/octopus/mgr/dashboard/)
 - [CEPH-MGR ADMINISTRATOR’S GUIDE](https://docs.ceph.com/en/octopus/mgr/administrator/#mgr-administrator-guide)
 - [How to test RBD and CephFS plugins with Kubernetes 1.14+](https://github.com/ceph/ceph-csi/tree/release-v3.6/examples)
+- [Ceph 运维手册](https://lihaijing.gitbooks.io/ceph-handbook/content/)
