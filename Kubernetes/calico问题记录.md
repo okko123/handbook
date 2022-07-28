@@ -28,10 +28,22 @@
 
 - 问题处理
   - 调整 calicao 网络插件的网卡发现机制，修改 IP_AUTODETECTION_METHOD 对应的value值。官方提供的yaml文件中，ip识别策略（IPDETECTMETHOD）没有配置，即默认为first-found，这会导致一个网络异常的ip作为nodeIP被注册，从而影响node-to-node mesh。我们可以修改成 can-reach 或者interface 的策略，尝试连接某一个Ready的node的IP，以此选择出正确的IP。
-  ```bash
-  #请按照实际网卡名进行修改
-  kubectl set env daemonset/calico-node -n kube-system IP_AUTODETECTION_METHOD=interface=eth.*
-  ```
-
+    ```bash
+    #请按照实际网卡名进行修改
+    kubectl set env daemonset/calico-node -n kube-system   IP_AUTODETECTION_METHOD=interface=eth.*
+    ```
+---
+## calico命令行使用记录
+- 获取节点
+  > calicoctl get nodes
+- 获取节点的配置信息
+  > calicoctl get node node_name -o yaml > node.yaml
+- 获取ip池列表
+  > calicoctl get ippool
+- 获取bgp配置
+  > calicoctl get bgpconfiguration
+- 获取bgp对等体配置
+  > calicoctl get bgppeer
+---
 ## 参考链接
 - [calico官方文档，改变自动检测方式](https://docs.projectcalico.org/networking/ip-autodetection#change-the-autodetection-method)

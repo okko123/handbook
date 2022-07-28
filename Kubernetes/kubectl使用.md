@@ -50,12 +50,26 @@
   > kubectl config use-context: 更改当前 context
   
   > kubectl config set-context: 修改 context 的元素
+## 查看deployment更新
+```bash
+kubectl rollout status -n namespace deployment test-deployment
+# 正常更新的结果为
+deployment "test-deployment" successfully rolled out
+
+# 有异常的结果为
+error: deployment "test-deployment" exceeded its progress deadline
+
+kubectl get -n namespace deployement test-deployment -o yaml
+# 在status字段中，提示更新失败的原因
+- [查看 Deployment 的状态](https://kuboard.cn/learning/k8s-intermediate/workload/wl-deployment/status.html)
+```
 ## kubernetes pv和pvc使用记录
 * https://kubernetes.io/zh/docs/concepts/storage/volumes/#hostpath
 ## alphine系统使用笔记
 * 安装telnet：apk add busybox-extras
 ## docker使用命令
 * 运行alphine系统，并进入命令行：docker run -it alphine:lastest
+---
 ## 参考链接
 * http://docs.kubernetes.org.cn/537.html
 * https://kubernetes.io/docs/concepts/services-networking/ingress/
