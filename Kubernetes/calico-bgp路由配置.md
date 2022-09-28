@@ -126,3 +126,4 @@
 ### 参考信息
 1. [干货收藏！Calico 路由反射模式权威指南](https://segmentfault.com/a/1190000040123110)
 2. [H3C交换机配置BGP与IGP交互配置](https://www.h3c.com/cn/d_201802/1065961_30005_0.htm)
+3. [Configure BGP peering](https://projectcalico.docs.tigera.io/networking/bgp)

@@ -137,3 +137,4 @@ kubectl edit ns cattle-system
 - [k8s中删除处于Terminating状态的namespace](https://zhuanlan.zhihu.com/p/267924292?utm_source=wechat_session)
 - [k8s ns 一直terminating，无法删除](https://blog.csdn.net/weixin_40161254/article/details/112267509)
 - [k8s删除Terminating状态的命名空间](https://www.jianshu.com/p/76a3a28af07c)
+- [k8s无法删除namespace](https://www.xswsym.online/pages/b0f6fd/#%E6%9F%A5%E7%9C%8Bnamespace)

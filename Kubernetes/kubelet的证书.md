@@ -117,5 +117,5 @@
 * [Kubernetes 集群 TLS 证书管理最佳实践](https://zhuanlan.zhihu.com/p/133828552)
 * [api信息查询](https://kubernetes.io/docs/reference/kubernetes-api/api-index/)
 * [官方bootstrap的文档](https://kubernetes.io/zh/docs/reference/access-authn-authz/bootstrap-tokens/)
-* [官方1.18版本的证书更新](https://v1-18.docs.kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/)
+* [官方证书更新](https://kubernetes.io/zh-cn/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/)
 * [kubelet配置文件介绍](https://kubernetes.io/zh/docs/reference/config-api/kubelet-config.v1beta1/)

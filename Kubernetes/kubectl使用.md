@@ -138,3 +138,15 @@ kubectl get -n namespace deployement test-deployment -o yaml
   EOF
   kubectl patch deployment deploymentname -n namespace --patch "$(cat patch.yaml)"
   ```
+
+### 端口映射
+```bash
+kubectl port-forward --namespace=ingress-nginx service/ingress-nginx-controller 8080:80
+```
+
+### 创建deployment、ingress、svc
+```bash
+kubectl create deployment echo --image=e2eteam/echoserver:2.2 --port=8080
+kubectl expose deployment echo
+kubectl create ingress echo --class=kong --rule="echo.qdama.test/*=echo:8080"
+```
