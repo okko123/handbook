@@ -22,9 +22,9 @@
      sed -e "s/strictARP: false/strictARP: true/" | \
      kubectl apply -f - -n kube-system
      ```
-- 安装
+- 0.12.1版本安装
   ```bash
-  wget https://github.com/metallb/metallb/archive/refs/tags/v0.  12.1.tar.gz
+  wget https://github.com/metallb/metallb/archive/refs/tags/v0.12.1.tar.gz
   tar xf v0.12.1.tar.gz
   cd metallb-0.12.1
   
@@ -58,6 +58,37 @@
   # 创建后端应用和服务测试
   kubectl apply -f manifests/ tutorial-2.yaml
   ```
+- 0.13.7版本安装
+  ```bash
+  ### 设置ipvs模式，并启用严格ARP模式
+
+  # see what changes would be made, returns nonzero returncode if different
+  kubectl get configmap kube-proxy -n kube-system -o yaml | \
+  sed -e "s/strictARP: false/strictARP: true/" | \
+  kubectl diff -f - -n kube-system
+
+  # actually apply the changes, returns nonzero returncode on errors only
+  kubectl get configmap kube-proxy -n kube-system -o yaml | \
+  sed -e "s/strictARP: false/strictARP: true/" | \
+  kubectl apply -f - -n kube-system
+
+  ### 安装manifest
+  kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.7/config/manifests/  metallb-native.yaml
+
+  ###配置IP池
+  cat > ip.yaml <<EOF
+  apiVersion: metallb.io/v1beta1
+  kind: IPAddressPool
+  metadata:
+    name: cheap
+    namespace: metallb-system
+  spec:
+    addresses:
+    - 192.168.10.0/24
+  EOF
+
+  kubectl apply -f ip.yaml
+  ```
 - 查看service分配的EXTERNAL-IP
 ![](img/metallb-1.png)
 
@@ -68,3 +99,4 @@
 - [Metallb介绍：一个开源的k8s LB](https://zhuanlan.zhihu.com/p/103717169)
 - [Kuberntes部署MetalLB负载均衡器](https://blog.csdn.net/networken/article/details/85928369)
 - [官方文档](https://metallb.universe.tf/installation/)
+- [Controlling automatic address allocation](https://metallb.universe.tf/configuration/_advanced_ipaddresspool_config/)

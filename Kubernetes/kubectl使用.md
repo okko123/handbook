@@ -150,3 +150,8 @@ kubectl create deployment echo --image=e2eteam/echoserver:2.2 --port=8080
 kubectl expose deployment echo
 kubectl create ingress echo --class=kong --rule="echo.qdama.test/*=echo:8080"
 ```
+
+### 获取所有deployment的资源限制
+```bash
+kubectl get deployment -o=jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.template.spec.containers[0].resources.limits}{"\n"}{end}'
+```

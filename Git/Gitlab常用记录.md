@@ -41,7 +41,24 @@ gitlab-ctl reconfigure
 gitlab-ctl restart
 gitlab-rake gitlab:check SANITIZE=true
 ```
+## 禁用/启用 本地用户密码认证
+> 使用拥有管理员权限的账号登陆
+  - On the top bar, select Main menu > Admin.
+  - On the left sidebar, select Settings > General.
+  - Expand the Sign-in restrictions section.
+  - Password authentication enabled
+  - You can restrict the password authentication for web interface and Git over HTTP(S):
+  - Web interface: When this feature is disabled, the Standard sign-in tab is removed and an external authentication provider must be used.
+  - Git over HTTP(S): When this feature is disabled, a Personal Access Token or LDAP password must be used to authenticate.
+## 通过命令行将用户设置为管理员(admin)
+```bash
+sudo gitlab-rails console -e production
+user = User.find_by(username: 'my_username')
+user.admin = true
+user.save!
+```
 ---
 ## 参考连接
-[gitlab备份](https://docs.gitlab.com/ce/raketasks/backup_restore.html)
-[gitlab恢复](https://docs.gitlab.com/ce/raketasks/backup_restore.html#restore)
+- [gitlab备份](https://docs.gitlab.com/ce/raketasks/backup_restore.html)
+- [gitlab恢复](https://docs.gitlab.com/ce/raketasks/backup_restore.html#restore)
+- [Sign-in restrictions](https://docs.gitlab.com/ee/user/admin_area/settings/sign_in_restrictions.html

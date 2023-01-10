@@ -267,3 +267,4 @@ systemctl enable openvpn-server@server
 - [OpenVPN服务部署](https://developer.aliyun.com/article/829724#slide-6)
 - [easyrsa使用指南](https://github.com/OpenVPN/easy-rsa/blob/master/README.quickstart.md)
 - [如何在 Ubuntu 20.04 上设置和配置 OpenVPN 服务器](https://www.gingerdoc.com/tutorials/how-to-set-up-and-configure-an-openvpn-server-on-ubuntu-20-04)
+- [Configure OpenVPN LDAP Based Authentication](https://kifarunix.com/configure-openvpn-ldap-based-authentication/)
