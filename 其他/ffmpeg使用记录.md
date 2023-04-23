@@ -9,6 +9,7 @@
   > ffmpeg -i HDCTV.ts -c:v libx265 HDCTV.mkv
 - 获取所有流（包括音频，字幕流），默认的情况下ffmpeg只保留1路的音频
   > ffmpeg -i HDCTV.ts -c:v libx265 -c:a copy -c:s copy  -map 0 HDCTV.mkv
+  > ffmpeg -i movic.mkv -preset veryslow -c:v libx265 -c:a copy -c:s copy -map 0 movic_x265_veryslow.mkv
 - 接合或合并多个视频部分到一个
   > FFmpeg 也可以接合多个视频部分，并创建一个单个视频文件。创建包含你想接合文件的准确的路径的 join.txt。所有的文件都应该是相同的格式（相同的编码格式）。所有文件的路径应该逐个列出，像下面。
   ```txt
@@ -30,8 +31,24 @@
   > 上面的命令将接合 part1.mp4、part2.mp4、part3.mp4 和 part4.mp4 文件到一个称为 output.mp4 的单个文件中。
 - 使用intel核显加速转码-QSV，首先需要编译ffmpeg源码，支持QSV硬件加速
   > /opt/ffmpeg/bin/ffmpeg -hwaccel qsv -c:v h264_qsv -i input.mp4 -crf 22 -c:v hevc_qsv  -c:a copy -c:s copy  -map 0 output.mkv
+- ffmpeg嵌入字幕
+  - 内挂字幕
+    ````bash
+    ffmpeg -i input.mkv -i subtitles.ass -codec copy -map 0 -map 1 output.mkv
+    ffmpeg -i infile.mp4 -f srt -i infile.srt -c:v copy -c:a copy -c:s mov_text outfile.mp4
+
+    # 添加标题
+    ffmpeg -i input.mkv -i subtitles.ass -codec copy -map 0 -map 1 -metadata:s:s:0 title=中文 language=zho output.mkv
+    ```
+  - 内嵌字幕
+    ```bash
+    ffmpeg -i input.mp4 -vf "subtitles=subtitle.srt" output.mp4
+    ```
 ---
 ### 参考连接
 - [给新手的 20 多个 FFmpeg 命令示例](https://zhuanlan.zhihu.com/p/67878761)
 - ["Intel Quick Sync Video" is the marketing name for a set of hardware features available inside many Intel GPUs.](https://trac.ffmpeg.org/wiki/Hardware/QuickSync)
 - [Ubuntu20.04 ffmpeg添加 Intel核显QSV加速支持](https://zhuanlan.zhihu.com/p/372361709)
+- [ffmpeg嵌入字幕](https://crifan.github.io/media_process_ffmpeg/website/subtitle/embed/)
+- [FFmpeg+Aegisub实现“视频转码自由”](https://zhuanlan.zhihu.com/p/501830892)
+- [ffmpeg文档](https://ffmpeg.org/ffmpeg.html)

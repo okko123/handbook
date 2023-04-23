@@ -18,7 +18,7 @@ GET /_cat/nodes?v
 ```
 
 ## 索引
-```json
+```shell
 #开启索引，支持通配
 POST /my_index_name/_open
 POST /my_index_name*/_open
@@ -38,6 +38,12 @@ GET '/_cat/indices?v'
 PUT /my_index/_settings
 {
     "number_of_replicas": 1
+}
+
+#关闭所有索引的只读锁
+PUT /*/_settings
+{
+    "index.blocks.read_only_allow_delete": null
 }
 
 #合并段(segments)
@@ -91,6 +97,11 @@ PUT /_template/sw_template
         }
     }
 }
+
+# 删除模板
+DELETE /_template/sw_template
+DELETE /_template/sw_template*
+
 ```
 ## 集群
 ```json

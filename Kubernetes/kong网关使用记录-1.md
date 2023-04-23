@@ -40,6 +40,29 @@
 - 访问konga UI 的地址ip:1337，配置初始化用户，配置kong的管理地址
 ### Prometheus监控
 ---
+### kong日志格式修改
+---
+- 修改kong-proxy的deployment配置，在env下添加以下新的配置
+  ```bash
+  - name: KONG_NGINX_HTTP_LOG_FORMAT
+    value: custom_fmt '$remote_addr - $remote_user [$time_local] "$request"
+      $status "$upstream_status" $body_bytes_sent "$http_referer" "$http_user_agent"
+      "$request_time" "$upstream_response_time"'
+  ```
+- 修改KONG_ADMIN_ACCESS_LOG、KONG_PROXY_ACCESS_LOG的内容。
+  ```bash
+  - name: KONG_ADMIN_ACCESS_LOG
+    value: /dev/stdout custom_fmt
+  - name: KONG_PROXY_ACCESS_LOG
+    value: /dev/stdout custom_fmt
+  ```
+### kong关闭版本号显示，更多配置参考/etc/kong/kong.conf.default配置文件
+---
+- 修改kong-proxy的deployment配置，在env下添加以下新的配置
+  ```bash
+  - name: KONG_HEADERS
+    value: "off"
+  ```
 ### kong的strip_path使用
 ---
 - ingress配置，kong中的strip_path用于是否将请求中的url中path前缀进行剥离，在kong controller的不同版本中, 使用方法不同。开启后，会讲path的路径去除，再转发到后端的服务上
@@ -71,7 +94,17 @@ spec:
          servicePort: 80
 ```
 ---
+### kong admin API的使用
+- 获取路由信息
+  ```bash
+  # 获取所有路由信息
+  GET /routes
+
+  # 获取指定服务的路由信息
+  GET/services/{service name or id}/routes
+  ```
 ## 参考信息
 - [Expose your Services with Kong Gateway](https://docs.konghq.com/getting-started-guide/2.4.x/expose-services/)
 - [helm变量说明](https://github.com/Kong/charts/tree/main/charts/kong)
 - [Kong学习(strip_path使用)](https://izsk.me/2020/09/23/Kong-strip-path/)
+- [Kong API文档](https://docs.konghq.com/gateway/latest/admin-api/#route-object)

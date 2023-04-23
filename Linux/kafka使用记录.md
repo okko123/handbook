@@ -30,16 +30,27 @@
    ```
 
 ### 查看消费数据
-1. 查看所有组：./kafka-consumer-groups.sh --bootstrap-server kafka-1.default.svc.cluster.local:9092 --list
-2. 查看消费情况：./kafka-consumer-groups.sh --describe --bootstrap-server kafka-1.default.svc.cluster.local:9092 --group usercenter
+1. 查看所有组：
+   ```bash
+   ./kafka-consumer-groups.sh --bootstrap-server kafka-1.default.svc.cluster.local:9092 --list
+   ```
+2. 查看消费情况：
+   ```bash
+   ./kafka-consumer-groups.sh --describe --bootstrap-server kafka-1.default.svc.cluster.local:9092 --group usercenter
    - 参数解释：
    --describe  显示详细信息
    --bootstrap-server 指定kafka连接地址
    --group 指定组
    注意：--group指定的组必须存在才行！可以用上面的--list命令来查看
-
+   ```
+### 修改topic的保留时间
+```bash
+./kafka-configs.sh --alter --zookeeper 192.168.X.X:2281 --entity-type topics --entity-name test1 --add-config retention.ms=864000000
+```
 ### 修改topic的partitions
+```bash
 ./kafka-topics.sh --zookeeper vlnx111122:2181 --alter --topic test --partitions 6
+```
 ### 扩容、删除机器
 只要配置zookeeper.connect为要加入的集群，再启动Kafka进程，就可以让新的机器加入到Kafka集群。但是新的机器只针对新的Topic才会起作用，在之前就已经存在的Topic的分区，不会自动的分配到新增加的物理机中。为了使新增加的机器可以分担系统压力，必须进行消息数据迁移。Kafka提供了kafka-reassign-partitions.sh进行数据迁移。
 
@@ -94,3 +105,4 @@ topic为test目前在broker id为1,2,3的机器上，现又添加了两台机器
   ## 参考连接
   - [kafka重新分配partition](https://wzktravel.github.io/2015/12/31/kafka-reassign/)
   - [kafka查看消费数据](https://cloud.tencent.com/developer/article/1589121)
+  - [kafka怎么设置topic数据保留时间](https://forum.huawei.com/enterprise/zh/thread/580942611450052608)

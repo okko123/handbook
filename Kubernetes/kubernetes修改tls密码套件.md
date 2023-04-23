@@ -44,3 +44,4 @@ nmap --script ssl-enum-ciphers -p 2379 127.0.0.1
 ---
 ### 参考消息
 - [Kubelet Configuration](https://kubernetes.io/docs/reference/config-api/kubelet-config.v1beta1/)
+- [Disable 3DES_EDE_CBC_SHA cipher in etcd Kubernetes](https://stackoverflow.com/questions/67795166/disable-3des-ede-cbc-sha-cipher-in-etcd-kubernetes)
