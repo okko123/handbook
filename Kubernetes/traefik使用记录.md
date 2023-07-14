@@ -5,11 +5,9 @@
   wget https://get.helm.sh/helm-v3.2.4-linux-amd64.tar.gz
   tar xf helm-v3.2.4-linux-amd64.tar.gz
   cd linux-amd64
-  ./helm update
-  git clone https://github.com/containous/traefik-helm-chart
-
-  # 指定traefik使用traefik的namespace
-  helm install ./traefik-helm-chart --namespace=traefik
+  ./helm repo add traefik https://traefik.github.io/charts
+  ./helm repo update
+  ./helm install traefik traefik/traefik --namespace=traefik
   ```
 ### 查看traefik的控制面板
 ```bash
@@ -72,3 +70,4 @@ kubectl port-forward pod/pod_name --address 192.168.1.1 8888:9000 -n traefik
 ## 参考文档
 - [官方文档-路由](https://docs.traefik.io/routing/routers/#configuration-example)
 - [中文翻译文档](https://docs.traefik.cn/toml#kubernetes-ingress-backend)
+- [traefik-helm-chart](https://github.com/traefik/traefik-helm-chart)

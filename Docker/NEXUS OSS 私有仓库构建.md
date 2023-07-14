@@ -85,6 +85,32 @@
 2. 在nexus的task中添加以下2个任务，并执行后，才会释放空间
    1. Configure and run the 'Docker - Delete unused manifests and images' task to delete orphaned docker layers.
    2. Configure and run the 'Admin - Compact blob store' task to reclaim disk space from the blob store for any assets already marked soft-deleted, including the Docker related ones created using options in this article.
+### nexus2的maven仓库迁移
+- 将nexus2中的maven仓库迁移至nexus3中
+```bash
+cat > maven_import.sh <<EOF
+#!/bin/bash
+# copy and run this script to the root of the repository directory containing files
+# this script attempts to exclude uploading itself explicitly so the script name is important
+# Get command line params
+while getopts ":r:u:p:" opt; do
+    case $opt in
+        r) REPO_URL="$OPTARG"
+        ;;
+        u) USERNAME="$OPTARG"
+        ;;
+        p) PASSWORD="$OPTARG"
+        ;;
+    esac
+done
+  
+find . -type f -not -path './mavenimport\.sh*' -not -path '*/\.*' -not -path '*/\^archetype\-catalog\.xml*' -not -path '*/\^maven\-metadata\-local*\.xml' -not -path '*/\^maven\-metadata\-deployment*\.xml' | sed "s|^\./||" | xargs -I '{}' curl -u "$USERNAME:$PASSWORD" -X PUT -v -T {} ${REPO_URL}/{} ;
+EOF
+
+bash maven_import.sh -u admin -p password -r http://192.168.60.133:8081/repository/my_repo/
+```
+
+---
 ### 参考资料
 - https://help.sonatype.com/repomanager3/installation/run-as-a-service#RunasaService-systemd
 - [官方文档，配置ssl](https://help.sonatype.com/repomanager3/system-configuration/configuring-ssl#ConfiguringSSL-InboundSSL-ConfiguringtoServeContentviaHTTPS)

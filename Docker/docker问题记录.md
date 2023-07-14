@@ -22,7 +22,12 @@ docker system prune -a
 
 ## 查看docker空间占用
 docker system df -v
-
+## 容器自动重启
+```bash
+docker update --restart=onfailure:3 [容器名]
+docker run --restart-always
+docker update --restart=always [容器ID]
+```
 ## Dockerfile: ENTRYPOINT和CMD的区别
 [参考连接-1](https://zhuanlan.zhihu.com/p/30555962)
 

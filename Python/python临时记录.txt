@@ -49,6 +49,17 @@ def load_ssl_date(dt_string, pattern='%Y%m%d%H%M%SZ'):
     dt = src_tz.localize(datetime.datetime.strptime(dt_string, pattern))
     return dt.astimezone(tz=dst_tz)
 ---
+### 使用文件名中的数字进行排序
+```python
+import re
+
+l = ['file10.txt', 'file1.txt', 'file5.txt']
+s = sorted(l, key=lambda s: int(re.search(r'\d+', s)))
+print(s)
+
+```
+---
 ### 参考信息
 - [使用Python检查ssl证书过期时间](https://knktc.com/2021/06/20/use-python-to-check-ssl-expiry-date/)
 - [Python脚本批量检查SSL证书过期时间](https://linuxeye.com/479.html)
+- [Sort a list of numeric strings in Python](https://note.nkmk.me/en/python-sort-num-str/)

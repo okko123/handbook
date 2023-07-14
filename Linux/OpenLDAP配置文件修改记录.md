@@ -1,8 +1,12 @@
-## 使用ldif文件初始化OpenLDAP
+<!-- TOC -->
+- [使用ldif文件初始化OpenLDAP](#使用ldif文件初始化OpenLDAP)
+- [修改用户密码](#修改用户密码)
+<!-- /TOC -->
+### 使用ldif文件初始化OpenLDAP
 ---
 - 修改root DN、修改访问规则、修改root DN的密码
   ```bash
-  cat > new.ldif <<EOF
+  cat > init.ldif <<EOF
   dn: olcDatabase={1}mdb,cn=config
   changetype: modify
   replace: olcSuffix
@@ -15,108 +19,56 @@
   -
   replace: olcRootDN
   olcRootDN: cn=admin,dc=example,dc=cn
-  
-  dn: olcDatabase={1}mdb,cn=config
-  #olcRootDN: cn=admin,dc=example,dc=com
-  changetype: modify
+  -
   replace: olcRootPW
   olcRootPW: {SSHA}tlPDHrj3KEaHhP9dLrn92/1WA99ljt0y
   EOF
 
-  ldapmodify -Q -Y EXTERNAL -H ldapi:/// -f new.ldif
+  ldapmodify -Q -Y EXTERNAL -H ldapi:/// -f init.ldif
   ```
-- 修改用户密码
-  ```bash
-  #更改自己的用户密码；（需要知道自己的旧密码）
-  ldappasswd -H ldap://server_domain_or_IP -x -D "user_dn" -W -A -S
-
-  #使用rootDN修改普通用户密码
-  ldappasswd -H ldap://server_domain_or_IP -x -D "cn=admin,dc=example,dc=com" -W -S "uid=bob,ou=people,dc=example,dc=com"
-
-  #修改rootDN的密码（Changing the Password in the Config DIT）
-  1.Finding the Current RootDN Information（查找rootDN的信息）
-  ldapsearch -H ldapi:// -LLL -Q -Y EXTERNAL -b "cn=config" "(olcRootDN=*)" dn olcRootDN olcRootPW | tee ~/newpasswd.ldif
-
-  输出内容为:
-  dn: olcDatabase={0}config,cn=config
-  olcRootDN: cn=admin,cn=config
-  olcRootPW: {SSHA}Pr2ItyqqGT9v1TmOytffCMx71e9ct8h5
-  
-  dn: olcDatabase={1}mdb,cn=config
-  olcRootDN: cn=admin,dc=example,dc=com
-  olcRootPW: {SSHA}Bx/YNB41JvXAs3s7sOPXTa0AkQ7vIoxZ
-
-  2.使用slappasswd生成新密码的加密字符串，设置密码为qwert
-  slappasswd -s qwert
-  > {SSHA}axnmUjk7WT0mWehZVE5IqeZ790n5WVGX
-
-  3.编辑newpasswd.ldif
-  cat > newpasswd.ldif <<EOF
-  dn: olcDatabase={0}config,cn=config
-  changetype: modify
-  replace: olcRootPW
-  olcRootPW: {SSHA}axnmUjk7WT0mWehZVE5IqeZ790n5WVGX
-  
-  dn: olcDatabase={1}mdb,cn=config
-  changetype: modify
-  replace: olcRootPW
-  olcRootPW: {SSHA}axnmUjk7WT0mWehZVE5IqeZ790n5WVGX
-  EOF
-
-  4. 导入配置
-  ldapmodify -H ldapi:// -Y EXTERNAL -f ~/newpasswd.ldif
-
-  # Changing the Password in the Normal DIT
-  cat > newpasswd.ldif <<EOF
-  dn: cn=admin,dc=example,dc=com
-  changetype: modify
-  replace: userPassword
-  userPassword: {SSHA}Bx/YNB41JvXAs3s7sOPXTa0AkQ7vIoxZ
-  EOF
-  
-  ldapmodify -H ldap:// -x -D "cn=admin,dc=example,dc=com" -W -f ~/newpasswd.ldif
-  ```
+---
 - 初始化目录
   ```bash
   cat > user.ldif <<EOF
-  dn: dc=example, dc=com
+  dn: dc=example, dc=cn
   dc: example
   o: My Company
   objectclass: organization
   objectclass: dcObject
   
-  dn: cn=admin, dc=example, dc=com
+  dn: cn=admin, dc=example, dc=cn
   cn: Manager
   sn: Manager
   objectclass: person
   EOF
+
   ldapadd -D "cn=admin, dc=example, dc=cn" -W  -f user.ldif
   ```
-- 添加模块；syncprov/ppolicy/memberof
+---
+- 添加模块；syncprov/ppolicy/memberof/refint
   ```bash
   cat > module.ldif <<EOF
   dn: cn=module{0},cn=config
   changetype: modify
   add: olcModuleLoad
   olcModuleLoad: syncprov
-  
-  dn:cn=module{0},cn=config
-  changetype: modify
+  -
   add: olcModuleLoad
   olcModuleLoad: ppolicy
-  
-  dn: cn=module{0},cn=config
-  changetype: modify
+  -
   add: olcModuleLoad
   olcModuleLoad: memberof
+  -
+  add: olcModuleLoad
+  olcModuleLoad: refint
   EOF
 
   ldapadd -Y EXTERNAL -H ldapi:/// -f module.ldif
 
-
   # 查看到当前系统中已经加载的模块：
   ldapsearch -H ldapi:// -Y EXTERNAL -b "cn=config" -LLL -Q "objectClass=olcModuleList"
   ```
+---
 - 修改访问规则
   - olcAccess的语法规则
     > olcAccess: to \<what\> \[ by \<who\> \[\<accesslevel\>\] \[\<control\>\] \]+
@@ -181,9 +133,11 @@
 
     ldapmodify -Q -Y EXTERNAL -H ldapi:/// -f add_access.ldif
     ```
+---
 - 配置 OpenLDAP Pasword policy
   ```bash
   # 检查ppolicy的schema是否已经加载
+  # openldap 2.5以后，ppolicy.schema被移除了
   > root@d0d4490a27c6:/# ldapsearch -Q -LLL -Y EXTERNAL -H ldapi:/// -b cn=schema,cn=config dn
   > dn: cn=schema,cn=config
   > dn: cn={0}core,cn=schema,cn=config
@@ -224,7 +178,7 @@
   objectClass: olcOverlayConfig
   objectClass: olcPPolicyConfig
   olcOverlay: ppolicy
-  olcPPolicyDefault: cn=ppolicy,ou=policies,dc=example,dc=com
+  olcPPolicyDefault: cn=ppolicy,ou=policies,dc=example,dc=cn
   olcPPolicyHashCleartext: TRUE
   olcPPolicyUseLockout: TRUE
   EOF
@@ -233,12 +187,12 @@
 
   # 配置 default PPolicy 和规则。逻辑：密码三个月到期，过期后再使用五次后将自动锁定，必须找管理员解锁；能修改最近5次使用过的密码；连续5次输入错误密码，自动锁定账号5分钟
   cat > default_ppolicy.ldif <<EOF
-  dn: ou=policies,dc=example,dc=com
+  dn: ou=policies,dc=example,dc=cn
   objectClass: organizationalUnit
   objectClass: top
   ou: policies
 
-  dn: cn=ppolicy,ou=policies,dc=example,dc=com
+  dn: cn=ppolicy,ou=policies,dc=example,dc=cn
   cn: ppolicy
   objectClass: pwdPolicy
   objectClass: device
@@ -260,9 +214,10 @@
   pwdSafeModify: FALSE
   EOF
 
-  ldapadd -x -D'cn=admin,dc=xxx,dc=com' -W -H ldapi:/// -f default_ppolicy.ldif
+  ldapadd -x -D'cn=admin,dc=example,dc=cn' -W -H ldapi:/// -f default_ppolicy.ldif
   ```
-- 配置 OpenLDAP memberof
+- 配置 OpenLDAP memberof。
+  > 注意，必需要加载refint模块，然后导入memberof和refint的overlay规则
   ```bash
   # 检查memberof的模块是否已经加载
   > root@d0d4490a27c6:/# ldapsearch -Q -LLL -Y EXTERNAL -H ldapi:/// -b cn=module{0},cn=config
@@ -293,8 +248,8 @@
   olcOverlay: memberof
   olcMemberOfDangling: ignore
   olcMemberOfRefInt: TRUE
-  olcMemberOfGroupOC: groupOfNames
-  olcMemberOfMemberAD: member
+  olcMemberOfGroupOC: groupOfUniqueNames
+  olcMemberOfMemberAD: uniqueMember
   olcMemberOfMemberOfAD: memberOf
   EOF
 
@@ -334,6 +289,7 @@
 
   ldapadd -Q -Y EXTERNAL -H ldapi:/// -f refint_overlay.ldif
   ```
+---
 - 配置 OpenLDAP syncprov。用于复制同步数据
   ```bash
   # 检查syncprov的模块是否已经加载
@@ -389,12 +345,16 @@
   olcUpdateRef: ldap://ldap2.example.org
   EOF
   ldapadd -Q -Y EXTERNAL -H ldapi:/// -f repl.ldif
-  
   ```
 - 添加用户测试
   ```bash
-  cat > test.ldif <<EOF
-  dn: uid=john,ou=people,dc=example,dc=com
+  cat > user.ldif <<EOF
+  dn: ou=people,dc=example,dc=cn
+  ou: people
+  objectClass: organizationalUnit
+  objectClass: top
+
+  dn: uid=john,ou=people,dc=example,dc=cn
   cn: John Doe
   givenName: John
   sn: Doe
@@ -402,7 +362,7 @@
   uidNumber: 5000
   gidNumber: 10000
   homeDirectory: /home/john
-  mail: john.doe@example.com
+  mail: john.doe@example.cn
   objectClass: top
   objectClass: posixAccount
   objectClass: shadowAccount
@@ -412,65 +372,80 @@
   loginShell: /bin/bash
   userPassword: {SHA}M6XDJwA47cNw9gm5kXV1uTQuMoY=
 
-  dn: cn=mygroup,ou=groups,dc=example,dc=com
-  objectClass: groupofnames
+  dn: ou=groups,dc=example,dc=cn
+  ou: groups
+  objectClass: organizationalUnit
+  objectClass: top
+
+  dn: cn=mygroup,ou=groups,dc=example,dc=cn
+  objectClass: groupOfUniqueNames
   cn: mygroup
   description: All users
-  member: uid=john,ou=people,dc=example,dc=com
+  uniqueMember: uid=john,ou=people,dc=example,dc=cn
   EOF
 
   # 导入信息
-  ldapadd -x -D cn=admin,dc=example,dc=com -W -f test.ldif
+  ldapadd -x -D cn=admin,dc=example,dc=cn -W -f user.ldif
 
   # 查询用户信息
-  ldapsearch -x -LLL -H ldap:/// -b uid=john,ou=people,dc=example,dc=com dn memberof
+  ldapsearch -x -LLL -H ldap:/// -b uid=john,ou=people,dc=example,dc=cn dn memberof
 
   # 结果应该为
-  dn: uid=john,ou=People,dc=example,dc=com
-  memberOf: cn=mygroup,ou=groups,dc=example,dc=com
+  dn: uid=john,ou=People,dc=example,dc=cn
+  memberOf: cn=mygroup,ou=groups,dc=example,dc=cn
   ```
-- 使用指定用户，查询用户信息
+### 修改用户密码
   ```bash
-  # 1. 创建新管理员，使用slappasswd生成加密后的密码字符串，密码为123456
-  cat > user.ldif <<EOF
-  dn: cn=django, dc=example, dc=com
-  userPassword: {SSHA}mvIbS7HlU5NYvhXhM+NO19j4NZMStvFB
-  description: administrator
-  objectclass: organizationalRole
-  objectclass: simpleSecurityObject
-  EOF
-  ldapadd -D "cn=admin, dc=example, dc=com" -W  -f user.ldif
+  #更改自己的用户密码；（需要知道自己的旧密码）
+  ldappasswd -H ldap://server_domain_or_IP -x -D "user_dn" -W -A -S
 
-  # 2. 调试olcAccess的规则
-  # 2.1删除规则olcAccess: {2}to * by self read by dn="cn=admin,dc=example,dc=com" write by * none
-  cat > del_olc.ldif <<EOF
+  #使用rootDN修改普通用户密码
+  ldappasswd -H ldap://server_domain_or_IP -x -D "cn=admin,dc=example,dc=cn" -W -S "uid=bob,ou=people,dc=example,dc=cn"
+
+  #修改rootDN的密码（Changing the Password in the Config DIT）
+  1.Finding the Current RootDN Information（查找rootDN的信息）
+  ldapsearch -H ldapi:// -LLL -Q -Y EXTERNAL -b "cn=config" "(olcRootDN=*)" dn olcRootDN olcRootPW | tee ~/newpasswd.ldif
+
+  输出内容为:
+  dn: olcDatabase={0}config,cn=config
+  olcRootDN: cn=admin,cn=config
+  olcRootPW: {SSHA}Pr2ItyqqGT9v1TmOytffCMx71e9ct8h5
+  
+  dn: olcDatabase={1}mdb,cn=config
+  olcRootDN: cn=admin,dc=example,dc=cn
+  olcRootPW: {SSHA}Bx/YNB41JvXAs3s7sOPXTa0AkQ7vIoxZ
+
+  2.使用slappasswd生成新密码的加密字符串，设置密码为qwert
+  slappasswd -s qwert
+  > {SSHA}axnmUjk7WT0mWehZVE5IqeZ790n5WVGX
+
+  3.编辑newpasswd.ldif
+  cat > newpasswd.ldif <<EOF
+  dn: olcDatabase={0}config,cn=config
+  changetype: modify
+  replace: olcRootPW
+  olcRootPW: {SSHA}axnmUjk7WT0mWehZVE5IqeZ790n5WVGX
+  
   dn: olcDatabase={1}mdb,cn=config
   changetype: modify
-  delete: olcAccess
-  olcAccess: {2}
+  replace: olcRootPW
+  olcRootPW: {SSHA}axnmUjk7WT0mWehZVE5IqeZ790n5WVGX
   EOF
 
-  ldapmodify -Q -Y EXTERNAL -H ldapi:/// -f del_olc.ldif
+  4. 导入配置
+  ldapmodify -H ldapi:// -Y EXTERNAL -f ~/newpasswd.ldif
 
-  # 2.2添加规则
-  cat > add_olc.ldif <<EOF
-  dn: olcDatabase={1}mdb,cn=config
+  # Changing the Password in the Normal DIT
+  cat > newpasswd.ldif <<EOF
+  dn: cn=admin,dc=example,dc=cn
   changetype: modify
-  add: olcAccess
-  olcAccess: to * 
-      by dn.exact="cn=auth,dc=qdama,dc=cn" read 
-      by self read
-      by dn="cn=admin,dc=qdama,dc=cn" write
-      by anonymous auth 
-      by * none
+  replace: userPassword
+  userPassword: {SSHA}Bx/YNB41JvXAs3s7sOPXTa0AkQ7vIoxZ
   EOF
-
-  ldapmodify -Q -Y EXTERNAL -H ldapi:/// -f add_olc.ldif
-
-  # 3. 测试
-  ldapsearch -x -H ldap://127.0.0.1:389 -D "cn=auth,dc=example,dc=com" -b "ou=develop,dc=example,dc=com" -W
-
+  
+  ldapmodify -H ldap:// -x -D "cn=admin,dc=example,dc=cn" -W -f ~/newpasswd.ldif
   ```
+
 ---
 # 参考信息
 - [How To Change Account Passwords on an OpenLDAP Server](https://www.digitalocean.com/community/tutorials/how-to-change-account-passwords-on-an-openldap-server)
