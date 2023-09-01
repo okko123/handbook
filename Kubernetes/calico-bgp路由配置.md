@@ -1,47 +1,82 @@
-### calico
-> 利用bgp路由，把外部网络与k8s内部网络打通
+## calico的BGP配置
+> 使用bgp路由，把外部网络与k8s内部网络打通。使用iBGP，建立BGP-Peer
 - 基本信息:
-  - 架构图:![](img/calico-bgp.png)
-  - 系统: ubuntu 22.04 LTS
-  - k8s: 1.22.12
-  - node ip: 172.16.81.161 - 166
-  - pod CIDR: 192.168.0.0/16
+  |IP|主机名|系统|角色|备注|
+  |-|-|-|-|-|
+  |172.16.30.101|ubuntu-1|Ubuntu 22.04 LTS|k8s-control||
+  |172.16.30.102|ubuntu-2|Ubuntu 22.04 LTS|k8s-woker|路由反射节点，与路由器 or 交换机对等|
+  |172.16.30.103|ubuntu-3|Ubuntu 22.04 LTS|k8s-woker||
+  |172.16.81.199|client|Ubuntu 22.04 LTS|client||
+  - 架构图-eBGP:![](img/calico-eBGP.png)
+  - 架构图-iBGP:![](img/calico-iBGP.png)
+  - k8s: 1.24.16
+  - pods CIDR: 192.168.0.0/16
   - svc CIDR: 10.96.0.0/24
-  - asNumber: 64567
-  - calico: v3.23.3
-  - kube-proxy: ipvs
-  - 外部网路CIDR: 192.168.10.0/24
-  - 路由器: RouterOS-6.48.6
-    - eth0: 172.16.81.200/24
-    - eth1: 10.10.10.254/24
-    - asNumber: 65000
+  - calico: v.3.26.1
+  - kube-proxy: iptables
+  - 外部网络CIDR: 172.16.81.0/24
+- 路由器:
+  |接口|IP|
+  |-|-|
+  |eth1|172.16.81.120/24|
+  |eth2|172.16.30.254/24|
+  - RouterOS-7.10.2
+  - ASNumber: 64513
 ---
-### ROS路由配置
+### RouterOS 路由配置
 ```bash
 ## 配置网卡IP地址
-/ip address add address=172.16.81.200 netmask=255.255.255.0 interface=ether1
-/ip address add address=10.10.10.254 netmask=255.255.255.0 interface=ether2
-/ip route add gateway=172.16.81.254
+/ip/address/add address=172.16.81.120/24 interface=ether1
+/ip/address/add address=172.16.30.254/24 interface=ether2
+/ip/firewall/nat/add action=masquerade chain=srcnat
 
-## 配置bgp路由
-/routing bgp instance set default as=64567 redistribute-static=no
-/routing bgp peer add name=peer-rr-k8s remote-address=10.10.10.254 remote-as=65000 address-familers=ip
-/routing bgp network add network=10.10.10.0/24
+## 配置BGP路由
+/routing/bgp/connection/add name=k8s-peer-1 remote.address=172.16.30.102 remote.as=64513 local.role=ebgp as=64513
 
 ## 检查路由信息
-/ip route print
+/ip/route/print
 
 ## bgp信息检查
-/routing bgp network print
-/routing bgp peer print
+/routing/bgp/connection/print
 ```
----
 ### calico配置
-1. 添加默认的BGP配置
-   - 关闭mesh模式
-   - service的CIDR对外宣告
-   - asNumber
-   - 日志级别
+1. 配置路由反射节点与路由器对等
+   ```bash
+   cat > peer-1.yaml <<EOF
+   apiVersion: projectcalico.org/v3
+   kind: BGPPeer
+   metadata:
+     name: rack1-tor
+   spec:
+     # 交换机or路由器的IP地址
+     peerIP: 172.16.30.254
+     # 交换机or路由器的AS号
+     asNumber: 64513
+     nodeSelector: rack == 'rack-1'
+   EOF
+
+   calicoctl apply -f peer-1.yaml
+
+   kubectl label node ubuntu-2 rack=rack-1
+   ```
+2. 配置路由反射器
+   ```bash
+   kubectl annotate node ubuntu-2 projectcalico.org/RouteReflectorClusterID=244.0.0.1
+   kubectl label node ubuntu-2 route-reflector=true
+
+   cat > peer-2.yaml <<EOF
+   kind: BGPPeer
+   apiVersion: projectcalico.org/v3
+   metadata:
+     name: peer-with-route-reflectors
+   spec:
+     nodeSelector: all()
+     peerSelector: route-reflector == 'true'
+   EOF
+
+   calicoctl apply -f peer-2.yaml
+   ```
+3. 配置BGP默认配置
    ```bash
    cat > bgp-config.yaml <<EOF
    apiVersion: projectcalico.org/v3
@@ -51,77 +86,50 @@
    spec:
      logSeverityScreen: Info
      nodeToNodeMeshEnabled: false
-     asNumber: 63400
+     asNumber: 64513
      serviceClusterIPs:
      - cidr: 10.96.0.0/24
    EOF
 
    calicoctl apply -f bgp-config.yaml
    ```
-2. 配置每个节点的BGP对等体
-   ```bash
-   cat > bgppeer-1.yaml <<EOF
-   apiVersion: projectcalico.org/v3
-   kind: BGPPeer
-   metadata:
-     name: rack1-tor
-   spec:
-     # 交换机or路由器的IP地址
-     peerIP: 172.16.81.200
-     # 交换机or路由器的AS号
-     asNumber: 65000
-     nodeSelector: rack == 'rack-1'
-   EOF
-   
-   calicoctl apply -f bgppeer-1.yaml
-
-   kubectl label node my-node rack=rack-1
-   ```
-3. 配置节点作为路由反射器
-   ```bash
-   ## 配置集群ID，将node1配置为路由反射器
-   calicoctl patch node my-node -p '{"spec": {"bgp": {"routeReflectorClusterID": "172.16.81.161"}}}'
-   kubectl label node my-node route-reflector=true
-
-   cat > bgppeer-rr.yaml <<EOF
-   apiVersion: projectcalico.org/v3
-   kind: BGPPeer
-   metadata:
-     name: rr1-to-node-peer              ## 给BGPPeer取一个名称，方便识别
-
-   spec:
-     nodeSelector: all()                           ## 通过节点选择器添加有rr-group == ‘rr1’标签的节点
-     peerSelector: route-reflector == 'true'       ## 通过peer选择器添加有rr-id == ‘rr1’标签的路由反射器
-   EOF
-
-   calicoctl apply -f bgppeer-rr.yaml
-   ```
 4. 检查calico的状态
    ```bash
-   calicoctl node status
-
-   ## 以下为正确的状态
+   #ubuntu-1节点
+   ./calicoctl-linux-amd64 node status
    Calico process is running.
 
    IPv4 BGP status
-   +------------------------+---------------+-------+------------+-------------+
-   |      PEER ADDRESS      |   PEER TYPE   | STATE |   SINCE    |    INFO     |
-   +------------------------+---------------+-------+------------+-------------+
-   | 172.16.81.162.port.178 | node specific | up    | 2022-07-27 | Established |
-   | 172.16.81.163.port.178 | node specific | up    | 2022-07-27 | Established |
-   | 172.16.81.164.port.178 | node specific | up    | 2022-07-27 | Established |
-   | 172.16.81.165.port.178 | node specific | up    | 2022-07-27 | Established |
-   | 172.16.81.166.port.178 | node specific | up    | 2022-07-27 | Established |
-   | 172.16.81.200          | node specific | up    | 09:53:10   | Established |
-   +------------------------+---------------+-------+------------+-------------+
+   +---------------+---------------+-------+----------+-------------+
+   | PEER ADDRESS  |   PEER TYPE   | STATE |  SINCE   |    INFO     |
+   +---------------+---------------+-------+----------+-------------+
+   | 172.16.30.102 | node specific | up    | 09:36:15 | Established |
+   +---------------+---------------+-------+----------+-------------+
 
    IPv6 BGP status
    No IPv6 peers found.
-   
+
+   #ubuntu-2节点
+   # ubuntu-2节点已经与集群里的各个节点建立起连接
+   # ubuntu-2节点已经与路由器节点建立起连接
+   ./calicoctl-linux-amd64 node status
+   Calico process is running.
+
+   IPv4 BGP status
+   +---------------+---------------+-------+----------+-------------+
+   | PEER ADDRESS  |   PEER TYPE   | STATE |  SINCE   |    INFO     |
+   +---------------+---------------+-------+----------+-------------+
+   | 172.16.30.101 | node specific | up    | 09:36:19 | Established |
+   | 172.16.30.103 | node specific | up    | 09:36:19 | Established |
+   | 172.16.30.254 | node specific | up    | 05:27:01 | Established |
+   +---------------+---------------+-------+----------+-------------+
+
+   IPv6 BGP status
+   No IPv6 peers found.
    ```
 ---
 ### 问题记录
-1. 由于不清楚如何在VYOS中配置bgp advertisments，导致vyos无法将10.10.10.0/24网段中的客户请求，转发至k8s集群中。在路由器上，能够正常ping通k8s集群内部的pod。当前的处理方法为使用ROS代替vyos
+1. 启用ipvs模式，访问svc地址，ipvs只能转发路由反射器本机上的容器，其他节点上的容器不能访问，因为数据包回包的时候没有经过路由反射器的节点，引起数据包被丢弃，导致tcp连接建立失败
 ---
 ### 参考信息
 1. [干货收藏！Calico 路由反射模式权威指南](https://segmentfault.com/a/1190000040123110)

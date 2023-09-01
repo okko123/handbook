@@ -103,6 +103,12 @@ spec:
   # 获取指定服务的路由信息
   GET/services/{service name or id}/routes
   ```
+### kong的域名解析规则
+- 在kong配置service后（假设新建一个cms-service服务），查询3种类型的DNS解析（SRV、CNAME、A），kong使用的dns规则为：
+  - cms-service.kong.svc.cluster.local
+  - cms-service.svc.cluster.local
+  - cms-service.cluster.local
+  - cms-service
 ## 参考信息
 - [Expose your Services with Kong Gateway](https://docs.konghq.com/getting-started-guide/2.4.x/expose-services/)
 - [helm变量说明](https://github.com/Kong/charts/tree/main/charts/kong)

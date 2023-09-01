@@ -26,6 +26,7 @@ apt install -y containerd
 sudo mkdir -p /etc/containerd
 containerd config default | sudo tee /etc/containerd/config.toml
 sed -i "s#k8s.gcr.io#registry.cn-hangzhou.aliyuncs.com/google_containers#g"  /etc/containerd/config.toml
+sed -i "s#registry.k8s.io#registry.cn-hangzhou.aliyuncs.com/google_containers#g"  /etc/containerd/config.toml
 sed -i 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.toml
 systemctl daemon-reload
 systemctl restart containerd --now

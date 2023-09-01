@@ -67,4 +67,27 @@ wget -O /etc/yum.repos.d/docker-ce.repo https://repo.huaweicloud.com/docker-ce/l
 sed -i 's+download.docker.com+repo.huaweicloud.com/docker-ce+' /etc/yum.repos.d/docker-ce.repo
 
 yum makecache
-yum install docker-ce docker-ce-cli containerd.io
+
+
+cat << EOF > /etc/modules-load.d/containerd.conf
+overlay
+br_netfilter
+EOF
+
+cat << EOF > /etc/sysctl.d/99-kubernetes-cri.conf
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+net.ipv4.ip_forward = 1
+user.max_user_namespaces=28633
+EOF
+
+yum install -y containerd.io
+containerd config default | sudo tee /etc/containerd/config.toml
+sed -i "s#k8s.gcr.io#registry.cn-hangzhou.aliyuncs.com/google_containers#g"  /etc/containerd/config.toml
+sed -i "s#registry.k8s.io#registry.cn-hangzhou.aliyuncs.com/google_containers#g"  /etc/containerd/config.toml
+sed -i 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.toml
+systemctl daemon-reload
+systemctl restart containerd --now
+
+yum install -y kubelet-1.26.7-0 kubectl-1.26.7-0 kubeadm-1.26.7-0
+kubeadm config images pull --image-repository registry.cn-hangzhou.aliyuncs.com/google_containers --kubernetes-version 1.26.7

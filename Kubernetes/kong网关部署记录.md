@@ -56,18 +56,18 @@
       ```yaml
       ingressController:
         env:
-          publish_service: hybrid/example-release-data-kong-proxy
+          publish_service: kong/kong-proxy-kong-proxy
       ```
     - Replace hybrid with your DP nodes' namespace and example-release-data with the name of the DP release.
     - 修改后的配置文件：[minimal-kong-hybrid-control.yaml](scripts/minimal-kong-hybrid-control.yaml)
       ```bash
-      ./helm  /ml --namespace kong
+      ./helm  install kong-admin kong/kong  -f minimal-kong-hybrid-control.yaml  --namespace kong
       ```
   - 安装数据节点。修改cluster_control_plane，与control_plane进行通信。github中的样例：[minimal-kong-hybrid-data.yaml](https://github.com/Kong/charts/blob/main/charts/kong/example-values/minimal-kong-hybrid-data.yaml)
     - Note that the cluster_control_plane value will differ depending on your environment. control-plane-release-name will change to your CP release name, hybrid will change to whatever namespace it resides in. See Kubernetes' documentation on Service DNS for more detail.
     - 修改后的配置文件：[minimal-kong-hybrid-data.yaml](scripts/minimal-kong-hybrid-data.yaml)
       ```bash
-      ./helm  install kong-data kong/kong  -f minimal-kong-hybrid-data.yaml --namespace kong
+      ./helm  install kong-proxy kong/kong  -f minimal-kong-hybrid-data.yaml --namespace kong
       ```
   - 检查集群状态，在控制节点上执行，正常的结果如下：
     ```bash
@@ -96,6 +96,43 @@
         "next": null
     }
     ```
+### konga ui面板安装
+- 使用docker部署PostgreSQL数据库；必须使用版本9，因为konga不支持新版的pg
+  ```bash
+  mkdir /data/pg-data
+  cat > pg-composefile.yaml <<EOF
+  version: "3.9"
+  services:
+    postgres:
+      image: postgres:9.6.23-alpine3.14
+      container_name: kong-database
+      restart: always
+      ports:
+        - 5432:5432
+      volumes:
+        - /data/pg-data:/var/lib/postgresql/data
+      environment:
+        POSTGRES_PASSWORD: mysecretpassword
+  EOF
+
+  ./docker-compose -f pg-composefile.yaml up -d
+
+  # 进入pg容器，切换posgres用户，创建用户和数据库
+  su - postgres
+  psql
+
+  # 创建用户kong，并设置密码kong。
+  CREATE USER kong WITH PASSWORD 'kong';
+
+  # 创建数据库，这里为konga_db，并指定所有者为kong
+  CREATE DATABASE kong_db OWNER kong;
+
+  # 将konga_db数据库的所有权限都赋予kong，否则kong只能登录控制台，没有任何数据库操作权限。
+  GRANT ALL PRIVILEGES ON DATABASE konga_db TO kong;
+
+  #对数据库进行初始化，必须在pg中创建konga使用的数据库，konga_db
+  docker run --rm pantsel/konga:latest -c prepare -a postgres  -u postgresql://kong:kong@192.168.1.1:5432/konga_db
+  ```
 ### 测试验证
 - 创建deployment，nginx和echoserver；在default的命名空间中
   ```bash

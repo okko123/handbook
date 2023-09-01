@@ -19,6 +19,9 @@ services:
 
 ## 清理镜像
 docker system prune -a
+## 清理docker日志
+docker inspect --format='{{.LogPath}}' [容器名/容器ID]
+truncate -s 0 /var/lib/containers/1380d936...-json.log
 
 ## 查看docker空间占用
 docker system df -v
