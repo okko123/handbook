@@ -33,6 +33,13 @@ EOF
 ```
 4. 将U盘插入的NAS服务器启动，登录后在bashboard页面看到registration为UNRAID OS Pro。说明激活成功
 ---
+### 常用插件安装
+- NerdPack: 用于安装perl工具
+- Dynamix System Temperature: 显示CPU，主板温度；风扇转速
+- unBALANCE: 数据迁移工具
+- transmission: 下载工具
+- Disk Location: 硬盘位置
+---
 ### 参考信息
 - [手动升级Unraid到最新6.10.3版本方法总结](https://post.smzdm.com/p/am8nvwed/)
 - [unraid_test](https://github.com/mysll/unraid_test)

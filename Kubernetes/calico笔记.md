@@ -31,3 +31,30 @@
   > serviceClusterIPs和serviceExternalIPs字段的功能类似于MetalLB的BGP模式，可以将K8s Service的访问地址（ClusterIP和ExternalIP）BGP到集群外的设备（例如TOR）。结合ECMP，可以将外部访问K8s Service的流量负载到K8s节点上，由Kube-proxy转发到真正的容器后端。
 
   > communities与prefixAdvertisements可以控制Calico BGP路由的community字段，支持RFC 1997中的well-known communities。使用样例如下：
+- calico 关闭IPIP模式
+  ```shell
+  calicoctl patch ippool default-ipv4-ippool -p '{"spec": {"ipipMode": "Never"}}'
+  ```
+- bgp configuration中配置serviceClusterIPs对外部BGP宣告service的网段
+  ```bash
+  cat > bgp-config.yaml <<EOF
+  apiVersion: projectcalico.org/v3
+  kind: BGPConfiguration
+  metadata:
+    name: default
+  spec:
+    serviceClusterIPs:
+    - cidr: 10.96.0.0/24
+  EOF
+
+  calicoctl apply -f bgp-config.yaml
+  ```
+### calico组件分析
+- calico架构图：
+![](img/calico-4.png)
+1. Felix
+   - 运行在每一台 Host 的 agent 进程，主要负责网络接口管理和监听、路由、ARP 管理、ACL 管理和同步、状态上报等。
+   - Felix会监听ECTD中心的存储，从它获取事件，比如说用户在这台机器上加了一个IP，或者是创建了一个容器等。用户创建pod后，Felix负责将其网卡、IP、MAC都设置好，然后在内核的路由表里面写一条，注明这个IP应该到这张网卡。同样如果用户制定了隔离策略，Felix同样会将该策略创建到ACL中，以实现隔离。
+2. BIRD
+   - Calico 为每一台 Host 部署一个 BGP Client，使用 BIRD 实现，BIRD 是一个单独的持续发展的项目，实现了众多动态路由协议比如 BGP、OSPF、RIP 等。在 Calico 的角色是监听 Host 上由 Felix 注入的路由信息，然后通过 BGP 协议广播告诉剩余 Host 节点，从而实现网络互通。
+   - BIRD是一个标准的路由程序，它会从内核里面获取哪一些IP的路由发生了变化，然后通过标准BGP的路由协议扩散到整个其他的宿主机上，让外界都知道这个IP在这里，你们路由的时候得到这里来。

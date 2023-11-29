@@ -1,4 +1,5 @@
 ## etcd使用笔记
+---
 - 查询成员
   ```bash
   ETCDCTL_API=3 etcdctl --endpoints 127.0.0.1:2379 \
@@ -27,8 +28,41 @@
   ```bash
   ETCDCTL_API=3 etcdctl --endpoints 127.0.0.1:2379 snapshot save snapshotdb
   ```
+- etcd获取键值
+  ```bash
+  etcdctl get "" --prefix --keys-only
+  etcdctl get "" --prefix
+  ```
+- etcd查看etcd的节点状态
+  ```bash
+  ETCDCTL_API=3 etcdctl --endpoints 127.0.0.1:2379 \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  endpoint status --write-out=table
+  ```
+- etcd查看警告、清理、释放空间
+  ```bash
+  # 查看警告信息
+  $ etcdctl --endpoints=http://127.0.0.1:2379 alarm list
+
+  # 获取当前版本
+  $ rev=$(etcdctl --endpoints=http://127.0.0.1:2379 endpoint status --write-out="json" | egrep -o '"revision":[0-9]*' | egrep -o '[0-9].*')
+
+  # 压缩旧版本
+  $ etcdctl --endpoints=http://127.0.0.1:2379 compact $rev
+
+  # 清理磁盘碎片
+  $ etcdctl --endpoints=http://127.0.0.1:2379 defrag
+
+  # 最后验证空间是否释放
+  $ etcdctl endpoint status
+
+  # 最后清除警告
+  $ etcdctl --endpoints=http://127.0.0.1:2379 alarm disarm
+  ```
 ---
-### 创建etcd集群
+## 创建etcd集群
 - 基本信息
   |名字|IP地址|主机名|
   |-|-|-|
@@ -154,3 +188,4 @@ EOF
 - [搭建 etcd 集群](https://doczhcn.gitbook.io/etcd/index/index-1/clustering)
 - [K8s 系列(三) - 如何配置 etcd https 证书？](https://zhuanlan.zhihu.com/p/403724708)
 - [etcd](http://timd.cn/etcd/)
+- [How to debug large db size issue?](https://etcd.io/blog/2023/how_to_debug_large_db_size_issue/)

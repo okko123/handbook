@@ -31,7 +31,10 @@
 /ip/firewall/nat/add action=masquerade chain=srcnat
 
 ## 配置BGP路由
-/routing/bgp/connection/add name=k8s-peer-1 remote.address=172.16.30.102 remote.as=64513 local.role=ebgp as=64513
+### ibgp模式
+/routing/bgp/connection/add name=k8s-peer-1 remote.address=172.16.30.102 remote.as=64513 local.role=ibgp as=64513
+### ebgp模式
+/routing/bgp/connection/add name=k8s-peer-1 remote.address=172.16.30.102 remote.as=64513 local.role=ebgp as=65000
 
 ## 检查路由信息
 /ip/route/print
@@ -127,9 +130,35 @@
    IPv6 BGP status
    No IPv6 peers found.
    ```
+
 ---
 ### 问题记录
 1. 启用ipvs模式，访问svc地址，ipvs只能转发路由反射器本机上的容器，其他节点上的容器不能访问，因为数据包回包的时候没有经过路由反射器的节点，引起数据包被丢弃，导致tcp连接建立失败
+```bash
+# 第一步，client发送SYN包建立连接，k8s-node02节点上的pods接收到SYN包后，回复SYN/ACK包
+           02-TCP-SYN/ACK
+  +-----------------------------------------------------+
+  v                                                     |
++--------+  01-TCP-SYN   +------------+  01-TCP-SYN   +------------+
+| client | ------------> | k8s-node01 | ------------> | k8s-node02 |
++--------+               +------------+               +------------+image.png
+
+# 第二步，由于k8s-node01没有接收到接收到k8s-node02回复的SYN/ACK包，因此重传SYN包
++--------+     +------------+  01-TCP-SYN   +------------+
+| client | --> | k8s-node01 | ------------> | k8s-node02 |
++--------+     +------------+               +------------+
+
+# 第三步，client接收到SYN/ACK包后，回复ACK包。但k8s-node01，没有收到SYN/ACK包，TCP连接的状态没有变更，因此对于client发送过来的的ACK进行丢弃
++--------+  03-TCP-ACK   +------------+     +------------+
+| client | ------------> | k8s-node01 | --> | k8s-node02 |
++--------+               +------------+     +------------+
+
+# 导致三次握手失败
+```
+2. 添加iptables -t nat -A POSTROUTING -j MASQUERADE后，导致/bin/calico-node -felix-live -bird-live 和 /bin/calico-node -felix-ready -bird-ready检查失败，引发容器重启，最终导致BGP连接断开
+3. 添加了MASQUERADE后，所有流量会经过路由反射器。
+4. iptables -t nat -A POSTROUTING ! -d 127.0.0.1 -j MASQUERADE
+5. 当路由反射器挂掉后，等待一段时间后，各节点的路由信息回丢失，导致网络中断
 ---
 ### 参考信息
 1. [干货收藏！Calico 路由反射模式权威指南](https://segmentfault.com/a/1190000040123110)

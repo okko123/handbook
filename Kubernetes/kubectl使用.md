@@ -38,17 +38,18 @@
   ```bash
   ## master节点设置taint
   kubectl taint nodes master1 node-role.kubernetes.io/master=:NoSchedule
+
   ## 所有节点删除taint
   kubectl taint nodes --all node-role.kubernetes.io/master-
   ```
 ## 切换集群上下文和命名空间
 - 实际上，我们也可以不使用额外的工具来切换上下文和命名空间，因为 kubectl 也提供了切换操作的命令，kubectl config命令就提供了用于编辑 kubeconfig 文件的功能，下面是一些基本用法：
   > kubectl config get-contexts: 列出所有的 context
-  
+
   > kubectl config current-context: 获取当前的 context
-  
+
   > kubectl config use-context: 更改当前 context
-  
+
   > kubectl config set-context: 修改 context 的元素
 ## 查看deployment更新
 ```bash
@@ -97,13 +98,12 @@ kubectl get -n namespace deployement test-deployment -o yaml
 ### 更新指定namespace中，deployment的镜像版本
    ```bash
    #需要先把镜像版本导入到images.txt的文件中
-    
    cat > images.txt<<EOF
    www.baidu.com:9091/springcloud/abc-service:qa-merge-35
    www.baidu.com:9091/springcloud/bcd-service:qa-gray-112
    www.baidu.com:9091/springcloud/web:qa-gray-76
    EOF
-    
+
    for i in `kubectl get deployment -n namespace --no-headers|awk '{print $1}'`
    do
        VERSION=`grep $i images.txt`
@@ -127,7 +127,7 @@ kubectl get -n namespace deployement test-deployment -o yaml
    ```
 ### 查看deployment版本
 - kubectl rollout history deployment.v1.apps/nginx-deployment -n namespace
-
+- kubectl rollout history statefulset -n apisix --revision=2 -o yaml
 ### 修改terminationGracePeriodSeconds
   ```bash
   cat > patch.yaml <<EOF
@@ -138,19 +138,16 @@ kubectl get -n namespace deployement test-deployment -o yaml
   EOF
   kubectl patch deployment deploymentname -n namespace --patch "$(cat patch.yaml)"
   ```
-
 ### 端口映射
 ```bash
 kubectl port-forward --namespace=ingress-nginx service/ingress-nginx-controller 8080:80
 ```
-
 ### 创建deployment、ingress、svc
 ```bash
 kubectl create deployment echo --image=e2eteam/echoserver:2.2 --port=8080
 kubectl expose deployment echo
 kubectl create ingress echo --class=kong --rule="echo.qdama.test/*=echo:8080"
 ```
-
 ### 获取所有deployment的资源限制
 ```bash
 kubectl get deployment -o=jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.template.spec.containers[0].resources.limits}{"\n"}{end}'

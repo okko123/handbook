@@ -12,7 +12,6 @@ prom/prometheus:v2.19.2 \
 --web.console.templates=/usr/share/prometheus/consoles \
 --web.enable-lifecycle
 ```
-
 ### Exporter的部署
 1. elasticsearch_exporter，使用docker方式部署
    ```bash
@@ -78,7 +77,6 @@ prom/prometheus:v2.19.2 \
    systemctl start mysqld_exporter
    systemctl enable mysqld_exporter
    ```
-
 ### 在Kubernetes中部署Prometheus
 - coreos提供的[部署文档](https://github.com/coreos/kube-prometheus)，必须注意：release版本有适配指定版本的Kubernetes
 - 以1.18为例：
@@ -88,7 +86,6 @@ prom/prometheus:v2.19.2 \
   kubectl create -f manifests/setup
   kubectl create -f manifests
   ```
-
 ### 修改prometheus的数据保存时间
 - 修改k8s部署的Prometheus的数据保存时间，修改配置。
   ```bash
@@ -98,3 +95,7 @@ prom/prometheus:v2.19.2 \
 https://github.com/prometheus-operator/prometheus-operator/blob/0e6ed120261f101e6f0dc9581de025f136508ada/Documentation/prometheus.md
 - 修改Prometheus的启动参数
   - 在启动参数中添加--storage.tsdb.retention.time=STORAGE.TSDB.RETENTION.TIME，指定保留数据的时间长度。默认保存15天，支持的单位U: y, w, d, h, m, s, ms.
+
+### 调整告警规则
+1. kafka的topic消息延迟告警。按照consumergroup, topic分类。且把anonyous.开头的消费组排除
+sum(kafka_consumergroup_lag{consumergroup !~ "anonymous.*"}) by (consumergroup, topic)

@@ -60,7 +60,55 @@ kubectl port-forward service/apisix-dashboard 8080:80
     ^/abc/(.*)
     /$1
     ```
+- 开启TLS-1.1协议
+  > 默认的情况下，APISIX只开启 TLS-1.2和TLS-1.3协议
+    ```bash
+    # 修改apisix的配置文件config.yaml，添加配置
+    apisix:
+      ssl:
+        ssl_protocols: TLSv1.1 TLSv1.2 TLSv1.3
+        ssl_ciphers: ECDHE-RSA-AES256-SHA:AES256-SHA:CAMELLIA256-SHA:ECDHE-RSA-AES128-SHA:AES128-SHA:CAMELLIA128-SHA
+    ```
+  > 检查TLS版本
+    ```bash
+    openssl s_client -connect www.baidu.com:443 -tls1_2
+    openssl s_client -connect www.baidu.com:443 -tls1_1
+    openssl s_client -connect www.baidu.com:443 -tls1
+
+    nmap --script ssl-enum-ciphers -p 443 baidu.com 
+    ```
+### apisix 启用Prometheus插件
+- 编辑apisix配置文件config.yaml
+  ```bash
+  plugin_attr:
+    prometheus:
+      export_addr:
+        ip: "0.0.0.0"
+        port: 9092
+  ```
+- 配置完成后，你可以通过以下命令提取相关监控指标：
+  ```bash
+  curl -i http://127.0.0.1:9092/apisix/prometheus/metrics
+
+  #返回如下结果即为配置成功。
+
+  HTTP/1.1 200 OK
+  Server: openresty
+  Date: Wed, 23 Mar 2022 13:22:58 GMT
+  Content-Type: text/plain; charset=utf-8
+  Transfer-Encoding: chunked
+  Connection: keep-alive
+
+  # HELP apisix_etcd_modify_indexes Etcd modify index for APISIX keys
+  # TYPE apisix_etcd_modify_indexes gauge
+  apisix_etcd_modify_indexes{key="consumers"} 0
+  ...
+  # TYPE apisix_node_info gauge
+  apisix_node_info{hostname="APISIX"} 1
+  ```
 ---
 - [minikube install apisix](https://apisix.apache.org/docs/ingress-controller/deployments/minikube/)
 - [两种方式教你在 K8s 中轻松部署 Apache APISIX](https://apisix.apache.org/zh/blog/2021/12/15/deploy-apisix-in-kubernetes/#%E9%83%A8%E7%BD%B2-apache-apisix-dashboard)
 - [Is Apache APISIX support strip_path in Kong? ](https://github.com/apache/apisix/issues/2208)
+- [APISIX的SSL协议](https://apisix.apache.org/zh/docs/apisix/ssl-protocol/)
+- [使用 Prometheus 监控云原生 API 网关 APISIX](https://apisix.apache.org/zh/blog/2022/07/13/monitor-api-gateway-apisix-with-prometheus/)

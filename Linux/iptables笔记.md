@@ -1,6 +1,11 @@
 ## iptables
 - 4个表:filter,nat,mangle,raw.
 - 5个链:PREROUTING,INPUT,FORWARD,OUTPUT,POSTROUTING,
+  1. PREROUTING 对应 从网卡进入到内核空间中
+  2. INPUT 对应 从内核空间到用户空间
+  3. FORWARD 对应 从一个网卡转发到另一个网卡
+  4. OUTPUT 对应 从用户空间到内核空间
+  5. POSTROUTING 对应 从内核空间到网卡
 - 4个表的优先级由高到低的顺序为:raw-->mangle-->nat-->filter
 ![](img/iptables.jpg)
 ---
@@ -43,3 +48,15 @@ raw.PREROUTING -> mangle.PREROUTING -> nat.PREROUTING -> mangle.INPUT -> filter.
 ---
 ### mark值有何意义
 > mark字段的值是一个无符号的整数，在32位系统上最大可以是4294967296（就是2的32次方），这足够用的了。比如对一个流或从某台机子发出的所有的包设置了mark值，就可以利用高级路由功能来对它们进行流量控制等操作了。mark值不是包本身的一部分，而是在包穿越计算机的过程中由内核分配的和它相关联的一个字段。它可能被用来改变包的传输路径或过滤。mark值只在本机有意义！在本机给包设置关联的mark值后，可通过该值对包后续的传输进行控制（排队，流量控制等）。mark的格式是--mark value[/mask]，如上面的例子是没有掩码的，带掩码的例子如--mark 1/1。如果指定了掩码，就先把mark值和掩码取逻辑与，然后再和包的mark值比较
+---
+### iptables使用笔记
+1. 设置NAT
+   ```bash
+   iptables -A FORWARD -o eth0 -i eth1 -s 10.0.0.0/24 -m conntrack --ctstate NEW -j ACCEPT
+   iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+   iptables -t nat -F POSTROUTING
+   iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+   ```
+#### 参考链接
+1. [Ubuntu 设置NAT共享网络（命令行方法）](https://www.cnblogs.com/security-darren/p/4576731.html)
+---

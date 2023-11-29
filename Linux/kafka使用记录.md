@@ -43,6 +43,22 @@
    --group 指定组
    注意：--group指定的组必须存在才行！可以用上面的--list命令来查看
    ```
+3. 删除消费组：
+   ```bash
+   ./kafka-consumer-groups.sh --bootstrap-server kafka-1.default.svc.cluster.local:9092 --group usercenter --delete 
+   ```
+4. 删除消费者组的偏移量：
+   ```bash
+   ./kafka-consumer-groups.sh --bootstrap-server kafka-1.default.svc.cluster.local:9092 --group usercenter --topic topic1 --delete-offsets 
+   ```
+5. 查看指定的消费者组里有哪些成员
+   ```bash
+   kafka-consumer-groups.sh --bootstrap-server kafka-1.default.svc.cluster.local:90922 --group CountryCounter --describe --members
+   ```
+6. 查看所有的消费者组里有哪些成员
+   ```bash
+   kafka-consumer-groups.sh --bootstrap-server kafka-1.default.svc.cluster.local:9092 --all-groups --describe --members
+   ```
 ### 修改topic的保留时间
 ```bash
 ./kafka-configs.sh --alter --zookeeper 192.168.X.X:2281 --entity-type topics --entity-name test1 --add-config retention.ms=864000000

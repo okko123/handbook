@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: etcd-deployment
+  namespace: default
+  labels:
+    app: etcd
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: etcd
+  template:
+    metadata:
+      labels:
+        app: etcd
+    spec:
+      containers:
+      - name: etcd-35
+        image: docker.io/bitnami/etcd:3.5
+        env:
+        - name: ALLOW_NONE_AUTHENTICATION
+          value: "yes"
+        - name: BITNAMI_DEBUG
+          value: "false"
+        - name: MY_POD_IP
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: status.podIP
+        - name: MY_POD_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.name
+        - name: ETCDCTL_API
+          value: "3"
+        - name: ETCD_NAME
+          value: $(MY_POD_NAME)
+        - name: ETCD_ADVERTISE_CLIENT_URLS
+          value: http://$(MY_POD_NAME).etcd-35.apisix.svc.cluster.local:2379
+        - name: ETCD_LISTEN_CLIENT_URLS
+          value: http://0.0.0.0:2379
+        - name: ETCD_INITIAL_ADVERTISE_PEER_URLS
+          value: http://$(MY_POD_NAME).etcd-35.apisix.svc.cluster.local:2380
+        - name: ETCD_LISTEN_PEER_URLS
+          value: http://0.0.0.0:2380
+        - name: ETCD_AUTO_COMPACTION_RETENTION
+          value: "24"
+        - name: ETCD_AUTO_COMPACTION_MODE
+          value: periodic
+        ports:
+        - containerPort: 2379
+          name: client
+          protocol: TCP
+        - containerPort: 2380
+          name: peer
+          protocol: TCP
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - name: etcd-s
+          mountPath: /mnt
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      schedulerName: default-scheduler
+      volumes:
+      - name: etcd-s
+        hostPath:
+          path: /data/etcd-data
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - host1
