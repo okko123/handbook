@@ -47,9 +47,9 @@
    ```bash
    ./kafka-consumer-groups.sh --bootstrap-server kafka-1.default.svc.cluster.local:9092 --group usercenter --delete 
    ```
-4. 删除消费者组的偏移量：
+4. 重置消费者组的偏移量，到最新的偏移量（需要先把消费者停掉）：
    ```bash
-   ./kafka-consumer-groups.sh --bootstrap-server kafka-1.default.svc.cluster.local:9092 --group usercenter --topic topic1 --delete-offsets 
+   ./kafka-consumer-groups.sh --bootstrap-server kafka-1.default.svc.cluster.local:9092 --group usercenter --topic topic1 --to-latest --reset-offsets --execute
    ```
 5. 查看指定的消费者组里有哪些成员
    ```bash

@@ -59,4 +59,4 @@ raw.PREROUTING -> mangle.PREROUTING -> nat.PREROUTING -> mangle.INPUT -> filter.
    ```
 #### 参考链接
 1. [Ubuntu 设置NAT共享网络（命令行方法）](https://www.cnblogs.com/security-darren/p/4576731.html)
----
+2. [Linux 网络和 iptables 运行原理](https://blog.k8s.li/linux-net-and-iptables.html)

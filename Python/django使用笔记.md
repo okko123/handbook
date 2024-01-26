@@ -17,6 +17,8 @@ python manage.py createsuperuser
 ---
 python manage.py makemigrations 
 python manage.py migrate # 生成数据表
+---
+
 四、数据库字段
 AutoField(Field)	- int自增列，必须填入参数 primary_key=True
 BigAutoField(AutoField)	- bigint自增列，必须填入参数 primary_key=True

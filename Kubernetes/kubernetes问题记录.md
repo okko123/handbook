@@ -98,6 +98,11 @@ whenUnsatisfiable 指示如果 Pod 不满足分布约束时如何处理：
 - 监控数据是采集的kubernetes上报的container_memory_working_set_bytes字段：
 - 分析kubernetes代码可以看到container_memory_working_set_bytes是取自cgroup memory.usage_in_bytes 与memory.stat total_inactive_file两者的差值:
 - 分析内核代码发现memory.usage_in_bytes的统计数据是包含了所有的file cache的， total_active_file和total_inactive_file都属于file cache的一部分，并且这两个数据并不是业务真正占用的内存，只是系统为了提高业务的访问IO的效率，将读写过的文件缓存在内存中，file cache并不会随着进程退出而释放，只会当容器销毁或者系统内存不足时才会由系统自动回收。
+- kubectl top pod 得到的内存使用量，并不是 cadvisor 中的 container_memory_usage_bytes，而是 container_memory_working_set_bytes，计算方式为：
+  - container_memory_usage_bytes = container_memory_rss + container_memory_cache + kernel memory
+  - container_memory_working_set_bytes = container_memory_usage_bytes – total_inactive_file（未激活的匿名缓存页）
+  - container_memory_working_set_bytes 是容器真实使用的内存量，也是 limit限制时的 oom 判断依据。
+  - cadvisor 中的 container_memory_usage_bytes 对应 cgroup 中的 memory.usage_in_bytes 文件，但 container_memory_working_set_bytes 并没有具体的文件，他的计算逻辑在 cadvisor 的代码中
 ---
 - [参考连接](https://imroc.io/posts/kubernetes/capture-packets-in-container/)
 
