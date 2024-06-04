@@ -148,3 +148,97 @@
 
      ldapadd -x -D'cn=admin,dc=xxx,dc=com' -W -H ldapi:/// -f default_ppolicy.ldif
      ```
+---
+> /etc/ldap/slapd.d/cn=config目录下，包含以下三个数据库：
+  1. dn: olcDatabase={-1}frontend,cn=config
+  2. dn: olcDatabase={0}config,cn=config
+  3. dn: olcDatabase={1}mdb,cn=config
+> olcDatabase: [{\<index\>}]\<type\>
+
+> 数据库条目必须具备olcDatabaseConfig对象类
+
+> frontend用于保存应用于所有其他数据库的数据库级别选项。后续的数据库定义也可能覆盖某些frontend设置。config和 frontend数据库总是隐式创建的,它们是在任何其他数据库之前创建的。
+
+- olcDatabase={0}config.ldif中包含如下信息说明为SASL机制授权(集成身份认证)
+  ```bash
+  cat olcDatabase\=\{0\}config.ldif
+
+  其中包含如下信息：
+  olcAccess: {0}to * by dn.exact=gidNumber=0+uidNumber=0,cn=peercred,cn=external, cn=auth manage   by * break
+  ```
+- olcDatabase={1}mdb.ldif中包含如下信息说明为简单授权（账号密码登录）
+  ```bash
+  cat olcDatabase\=\{1\}mdb.ldif
+
+  其中包含如下信息：
+  olcRootDN: cn=admin, dc=example, dc=cn
+  olcRootPW: lkajsdiji3j4tlkfdkgj
+  ```
+- 访问控制
+  ```bash
+  LDAP中的控制访问，是通过对数据库添加 olcAccess 指令来实现的。该指令的范式为：
+
+  olcAccess: to <what> [ by <who> [<access>] [<control>] ]+
+  正如前面所说，该指令定义了什么资源（what）可以由何人（who），执行什么（access）。因此再对照前面的配置，就明白下面这行配置的含义了：
+
+  olcAccess: to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage by * none
+
+  这个配置的意思是：对于当前数据库范围的所有资源，允许 root 进行管理，其他人不赋予任何权限。同时， olcRootDN 所指定的ID名称，不受访问控制的约束。
+  ```
+
+  > 默认的访问控制策略是允许所有客户端读取。无论定义了什么访问控制策略，rootdn总是被允许对所有内容拥有完全权限（即身份验证、搜索、比较、读取和写入）。因此，在子句中显式列出rootdn是无用的。
+
+  > 配置访问控制通过olcAccess实现
+    ```bash
+    olcAccess: {0}to attrs=userPassword by self write by anonymous auth by * none
+    olcAccess: {1}to attrs=shadowLastChange by self write by * read
+    olcAccess: {2}to * by * read
+
+    olcAccess: to <what> [by <who> [<access>] [<control>] ]+
+    <what>选择访问所应用的条目和/或属性，
+    <who>指定授予哪些实体访问权限
+    <access>指定授权的访问权限
+    ```
+
+> what的指定方式
+```bash
+<waht> ::= * |
+  [dn[.<basic-style>]=<regex> | dn.<scope-style>=<DN>]
+  [filter=<ldapfilter>] [attrs=<attrlist>]
+
+按DN选择条目:
+to * : 全部条目
+to dn[.<basic-style>]=<regex> : 正则表达式匹配的条目
+to dn.<scope-styple>=<DN> : dn请求范围内的条目
+  其中，<scope-style>可以是base，one，subtree or children
+    其中，base只匹配具有所提供的DN条目。（精确匹配，只匹配DN）
+          one匹配其父项所提供的DN条目。（dn的下一级）
+          subtree匹配子树中根为所提供的DN所有条目。（根为DN的所有条目，包括DN）
+          children匹配DN下的所有条目（但不匹配由DN命名的条目）。（根为DN的所有条目，不包括DN）
+```
+
+### who的指定方式
+
+|用户|描述|
+|---|---|
+|\*|所有对象，包括匿名和授权用户|
+|anonymous|匿名未授权用户|
+|users|授权用户|
+|self|与目标条目直接关联的用户，比如用户条目自己|
+|dn[.<basic-style>]=regex|符合正则匹配的用户|
+|dn.<scope-style>=<DN>|DN所指定范围内的用户|
+### access的指定方式：每个级别都意味着所有较低级别的访问。
+
+|级别|权限|描述|
+|---|---|---|
+|none|=0|没有权限|
+|disclose|=d|需要错误信息披露|
+|auth|=dx|需要进行授权(bind)的操作|
+|compare|=cdx|进行比较|
+|search|=scdx|进行搜索过滤|
+|read|=rscdx|进行读取搜索结果|
+|write|=wrcdx|进行修改或重命名|
+|manage|=mrscdx|进行管理|
+> 从上面的表格可以看出，权限是向下兼容的，即如果给用户指定了 write 的权限，那么他同时会拥有 read 、 search 、 compare 、 auth 以及 disclose 的权限。
+
+- [Linux 安装并配置 OpenLDAP 新编（5）访问控制](https://blog.csdn.net/yyp1998/article/details/133160723)

@@ -5,4 +5,5 @@
 - 获取桶的生命周期配置：ossutil lifecycle --method get oss://bucket-name
 ---
 ## 参考信息
-- [lifecycle（生命周期）](https://help.aliyun.com/document_detail/122574.html)
+- [lifecycle（生命周期）](https://help.aliyun.com/zh/oss/developer-reference/lifecycle)
+- [du（获取大小）](https://help.aliyun.com/zh/oss/developer-reference/du?spm=a2c4g.11186623.0.i9)

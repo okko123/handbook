@@ -10,3 +10,5 @@
 ---
 ### 参考信息
 - [Elasticsearch - mappings之dynamic的三种状态](https://www.cnblogs.com/Neeo/articles/10585035.html#%E4%B8%A5%E6%A0%BC%E6%A8%A1%E5%BC%8Fdynamicstrict)
+- [字段太多啦！3 招防止 Elasticsearch 映射爆炸式增长](https://www.elastic.co/cn/blog/3-ways-to-prevent-mapping-explosion-in-elasticsearch)
+- [一文搞懂 Elasticsearch 之 Mapping](https://www.cnblogs.com/wupeixuan/p/12514843.html)

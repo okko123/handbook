@@ -52,6 +52,8 @@ df.to_csv (r'/data/json/test.csv', index = None)
   datetime.datetime.now().date()
   datetime.date.today()
   datetime.time()
+
+  datetime.date.today().strftime("%Y-%m-%d %H:%M:%S")
   ```
 - 检查https证书的过期时间
 ```python

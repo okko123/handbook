@@ -36,7 +36,7 @@
    ```
 2. 查看消费情况：
    ```bash
-   ./kafka-consumer-groups.sh --describe --bootstrap-server kafka-1.default.svc.cluster.local:9092 --group usercenter
+   ./kafka-consumer-groups.sh --bootstrap-server kafka-1.default.svc.cluster.local:9092 --group usercenter --describe
    - 参数解释：
    --describe  显示详细信息
    --bootstrap-server 指定kafka连接地址
@@ -118,7 +118,11 @@ topic为test目前在broker id为1,2,3的机器上，现又添加了两台机器
   ```
 
 
+
+ ./kafka-configs.sh --bootstrap-server 10.111.212.241:9092 --alter --entity-type topics --entity-name k8s02_run --add-config retention.bytes=10737418240
+
   ## 参考连接
   - [kafka重新分配partition](https://wzktravel.github.io/2015/12/31/kafka-reassign/)
   - [kafka查看消费数据](https://cloud.tencent.com/developer/article/1589121)
   - [kafka怎么设置topic数据保留时间](https://forum.huawei.com/enterprise/zh/thread/580942611450052608)
+  - [kafka 修改topic partitions](http://blog.51yip.com/hadoop/2131.html)
