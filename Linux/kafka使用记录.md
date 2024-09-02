@@ -59,9 +59,10 @@
    ```bash
    kafka-consumer-groups.sh --bootstrap-server kafka-1.default.svc.cluster.local:9092 --all-groups --describe --members
    ```
-### 修改topic的保留时间
+### 修改topic的保留时间，修改保留大小
 ```bash
 ./kafka-configs.sh --alter --zookeeper 192.168.X.X:2281 --entity-type topics --entity-name test1 --add-config retention.ms=864000000
+./kafka-configs.sh --alter --zookeeper 192.168.X.X:2281 --entity-type topics --entity-name test1 --add-config retention.bytes=32212254720
 ```
 ### 修改topic的partitions
 ```bash
@@ -120,9 +121,18 @@ topic为test目前在broker id为1,2,3的机器上，现又添加了两台机器
 
 
  ./kafka-configs.sh --bootstrap-server 10.111.212.241:9092 --alter --entity-type topics --entity-name k8s02_run --add-config retention.bytes=10737418240
-
-  ## 参考连接
-  - [kafka重新分配partition](https://wzktravel.github.io/2015/12/31/kafka-reassign/)
-  - [kafka查看消费数据](https://cloud.tencent.com/developer/article/1589121)
-  - [kafka怎么设置topic数据保留时间](https://forum.huawei.com/enterprise/zh/thread/580942611450052608)
-  - [kafka 修改topic partitions](http://blog.51yip.com/hadoop/2131.html)
+---
+### 常用参数说明
+|参数|说明|
+|-|-|
+|segment.bytes=104857600|单个日志文件大小，默认1G|
+|delete.retention.ms=86400000|对于压缩日志保留的最长时间，也是客户端消费消息的最长时间，与retention.ms的区别在于一个控制未压缩数据，一个控制压缩后的数据|
+|retention.ms=86400000|如果使用“delete”的retention策略，这项配置就是指删除日志前日志保存的时间|
+|cleanup.policy=delete|默认方式 delete 将会丢弃旧的部分 compact 将会进行日志压缩|
+|compression.type=producer|压缩类型，此配置接受标准压缩编码 gzip, snappy, lz4 ，另外接受 uncompressed 相当于不压缩， producer 意味着压缩类型由producer指定|
+---
+## 参考连接
+- [kafka重新分配partition](https://wzktravel.github.io/2015/12/31/kafka-reassign/)
+- [kafka查看消费数据](https://cloud.tencent.com/developer/article/1589121)
+- [kafka怎么设置topic数据保留时间](https://forum.huawei.com/enterprise/zh/thread/580942611450052608)
+- [kafka 修改topic partitions](http://blog.51yip.com/hadoop/2131.html)

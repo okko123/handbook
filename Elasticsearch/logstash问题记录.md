@@ -78,7 +78,33 @@ output{
         document_type => "doc"
     }
 }
+```
+> 修改时间，添加时区，time字段的内容“2024-06-21 08:56:39.029”
+```bash
+input {
+    file {
+        path => ["/root/back.json"]
+        codec => "json"
+        start_position => "beginning"
+    }
+}
 
+filter {
+    date {
+        match => ["time", "yyyy-MM-dd HH:mm:ss.SSS"]
+        timezone => "Asia/Shanghai"
+        target => "time"
+
+    }
+}
+
+output{
+    elasticsearch {
+        hosts => ["192.168.1.1:9200"]
+        index => "index-2019.12.26"
+        document_type => "doc"
+    }
+}
 ```
 ---
 ## 查阅资料

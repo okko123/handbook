@@ -243,11 +243,3 @@ jmap -dump:live,format=b,file=快照文件名.heap 进程ID
 在版本升级或一些意外场景下，FE 节点的 image 可能出现元数据异常，并且可能出现异常的元数据被同步到其它 FE 的情况，导致所有 FE 不可工作。一旦发现 image 出现故障，最快的恢复方案是使用 Recovery 模式停止 FE 选举，并使用备份的 image 替换故障的 image。当然，时刻备份 image 并不是容易的事情，鉴于该故障常见于集群升级，我们建议在集群升级的程序中，增加简单的本地 image 备份逻辑，保证每次升级拉起 FE 进程前会保留一份当前最新的 image 数据。
 对于 BE 节点故障，如果是进程崩溃，会产生 core 文件，且 minos 会自动拉取进程；如果是任务卡住，则需要通过以下命令保留线程快照后重启进程：
 pstack 进程ID >> 快照文件名.pstack
-
-
-
-show create table k8s02_exception_log;
-show create table k8s02_message_log  ;
-show create table k8s02_request_log  ;
-show create table k8s02_response_log ;
-show create table k8s02_run_log      ;

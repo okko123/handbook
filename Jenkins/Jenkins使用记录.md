@@ -7,7 +7,18 @@
 - 需要安装插件Git Parameter
 - 在任务配置中，添加参数化构建过程
 
+### 使用jdk17 启动jekins报错
+- 报错信息
+  ```bash
+  # 日志报错
+  java.lang.NullPointerException: Cannot load from short array because "sun.awt.FontConfiguration.head" is null
 
+  # web界面报错
+  AWT is not properly configured on this server. Perhaps you need to run your container with “-Djava.awt.headless=true”
+
+  # 系统需要安装相应的字体库
+  yum install -y dejavu-sans-fonts fontconfig
+  ```
 
 ### 重置Jenkins的build序号
 在Jenkins的系统管理 - 脚本命令行中执行
@@ -24,7 +35,7 @@ Jenkins.instance.allItems.each() {
   item -> item.builds.each() { 
     build -> build.delete()
   }
-  item.updateNextBuildNumber(1001)
+  item.updateNextBuildNumber(1)
 }  
 
 ### 配置smtp发送邮件

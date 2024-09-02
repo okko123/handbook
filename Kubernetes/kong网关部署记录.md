@@ -7,6 +7,7 @@
     -e "KONG_DATABASE=postgres" \
     -e "KONG_PG_HOST=192.168.1.1" \
     -e "KONG_PG_USER=kong" \
+    -e "KONG_PG_DATABASE=kong_database_name" \
     -e "KONG_PG_PASSWORD=kong" \
     -e "KONG_CASSANDRA_CONTACT_POINTS=kong-database" \
     kong:latest kong migrations bootstrap
