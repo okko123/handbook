@@ -6,3 +6,4 @@
 ---
 ## 参考连接
 - [Generic Webhook Trigger Plugin](https://github.com/jenkinsci/generic-webhook-trigger-plugin)
+- [玩转触发器之Jenkins Generic Webhook使用技巧](https://www.51cto.com/article/682104.html)

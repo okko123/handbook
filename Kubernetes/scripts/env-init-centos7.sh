@@ -57,37 +57,47 @@ net.core.rmem_default = 8388608
 net.core.rmem_max = 16777216
 net.core.wmem_max = 16777216
 net.core.netdev_max_backlog = 262144
+
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+
+user.max_user_namespaces=28633
 EOF
-
-yum remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine
-yum install -y yum-utils device-mapper-persistent-data lvm2
-
-wget -O /etc/yum.repos.d/docker-ce.repo https://repo.huaweicloud.com/docker-ce/linux/centos/docker-ce.repo
-
-sed -i 's+download.docker.com+repo.huaweicloud.com/docker-ce+' /etc/yum.repos.d/docker-ce.repo
-
-yum makecache
-
 
 cat << EOF > /etc/modules-load.d/containerd.conf
 overlay
 br_netfilter
 EOF
 
-cat << EOF > /etc/sysctl.d/99-kubernetes-cri.conf
-net.bridge.bridge-nf-call-ip6tables = 1
-net.bridge.bridge-nf-call-iptables = 1
-net.ipv4.ip_forward = 1
-user.max_user_namespaces=28633
-EOF
-
+# install containerd
+yum remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine
+yum install -y yum-utils device-mapper-persistent-data lvm2
+yum-config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+yum clean all
+yum makecache
 yum install -y containerd.io
+
 containerd config default | sudo tee /etc/containerd/config.toml
 sed -i "s#k8s.gcr.io#registry.cn-hangzhou.aliyuncs.com/google_containers#g"  /etc/containerd/config.toml
 sed -i "s#registry.k8s.io#registry.cn-hangzhou.aliyuncs.com/google_containers#g"  /etc/containerd/config.toml
 sed -i 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.toml
+# add mirrors
+sed -i  '/registry.mirrors/a\        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]\n\          endpoint = ["https://docker.fxxk.dedyn.io", "https://dockerhub.icu", "https://dockerpull.com", "https://dockerproxy.cn", "https://docker.registry.cyou", "https://docker-cf.registry.cyou", "https://hub.uuuadc.top", "https://docker.ckyl.me"]' /etc/containerd/config.toml
+
 systemctl daemon-reload
 systemctl restart containerd --now
 
-yum install -y kubelet-1.26.7-0 kubectl-1.26.7-0 kubeadm-1.26.7-0
-kubeadm config images pull --image-repository registry.cn-hangzhou.aliyuncs.com/google_containers --kubernetes-version 1.26.7
+# 注意，需要修改baseurl和gpgkey的版本号，当前版版本为1.30
+cat <<EOF | tee /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://mirrors.aliyun.com/kubernetes-new/core/stable/v1.30/rpm/
+enabled=1
+gpgcheck=1
+gpgkey=https://mirrors.aliyun.com/kubernetes-new/core/stable/v1.30/rpm/repodata/repomd.xml.key
+EOF
+
+yum install -y kubelet-1.30.6 kubectl-1.30.6 kubeadm-1.30.6
+systemctl enable kubelet && systemctl start kubelet
+
+kubeadm config images pull --image-repository registry.cn-hangzhou.aliyuncs.com/google_containers --kubernetes-version 1.30.6

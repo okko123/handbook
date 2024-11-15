@@ -42,48 +42,115 @@ mv *.jar flink-1.18/lib
 # 启动flink
 bin/start-cluster.sh
 ```
-2. 通过Flink SQL 创建Kafka表
+2. 通过Flink SQL 创建Kafka表，数据写入至Doris中
+   ```bash
+   ./bin/sql-client.sh embedded
+   
+   # 创建表
+   CREATE TABLE gc_log (
+       `source` STRING,
+       `message` STRING
+   ) WITH (
+       'connector' = 'kafka', 
+       'topic' = 'gc_log', 
+       'properties.bootstrap.servers' = '192.168.0165:9092, 192.168.0166:9092, 192.168.0167:9092', 
+       'properties.group.id' = 'flinkGroup',
+       'format' = 'json',
+       'scan.startup.mode' = 'latest-offset',
+       'properties.auto.offset.reset' = 'none'
+   );
+
+   # 执行查询验证
+   select * from gc_log;
+
+   create table doris_gc_log (
+       `dt` TIMESTAMP,
+       `project` STRING,
+       `message` STRING
+   )
+   WITH (
+       'connector' = 'doris',
+       'fenodes' = '192.168.0.240:8030',
+       'table.identifier' = 'log_db.gc_log',
+       'username' = 'root',
+       'password' = '123456',
+       'sink.label-prefix' = 'doris_label_01'
+   );
+
+   # 提交，插入数据，从Kafka表中读取数据插入到Doris中
+   insert into doris_gc_log
+   select 
+   CURRENT_TIMESTAMP as dt, 
+   SPLIT_INDEX(source, '/', 7) as project, 
+   REGEXP_REPLACE(`message`,  '\r|\n|\t', '') as message
+   from gc_log;
+   ```
+3. 通过Flink SQL 创建Kafka表，数据写入至Elasticsearch中
 ```bash
-./bin/sql-client.sh embedded
+# 设置checkpoint的间隔时间
+SET execution.checkpointing.interval = 3s;
+# 设置执行模式：批处理还是流处理；streaming和batch
+SET execution.runtime-mode=streaming;
+# 设置默认并行度
+SET parallelism.default=1;
+# 设置状态TTL
+SET table.exec.state.ttl=1000;
+# 结果显示模式；tableau和changelog
+SET sql-client.execution.result-mode=tableau;
 
-# 创建表
-CREATE TABLE gc_log (
+# 配置从kafka读取的源数据表
+CREATE TABLE run_log_02 (
     `source` STRING,
-    `message` STRING
-) WITH (
-    'connector' = 'kafka', 
-    'topic' = 'gc_log', 
-    'properties.bootstrap.servers' = '192.168.0165:9092, 192.168.0166:9092, 192.168.0167:9092', 
-    'properties.group.id' = 'flinkGroup',
-    'format' = 'json',
-    'scan.startup.mode' = 'latest-offset',
-    'properties.auto.offset.reset' = 'none'
-);
-
-# 执行查询验证
-select * from gc_log;
-
-create table doris_gc_log (
     `dt` TIMESTAMP,
-    `project` STRING,
-    `message` STRING
-)
-WITH (
-    'connector' = 'doris',
-    'fenodes' = '192.168.0.240:8030',
-    'table.identifier' = 'log_db.kgc_log',
-    'username' = 'root',
-    'password' = '123456',
-    'sink.label-prefix' = 'doris_label_01'
+    `@timestamp` STRING,
+    `level` VARCHAR,
+    `thread` VARCHAR,
+    `class` VARCHAR,
+    `traceid` VARCHAR,
+    `message` STRING,
+    `host` MAP<STRING,STRING>
+) WITH (
+    'connector' = 'kafka',
+    'topic' = '02_run_json',
+    'properties.bootstrap.servers' = '192.168.0.45:9092, 192.168.0.46:9092, 192.168.0.47:9092',
+    'properties.group.id' = 'flink_02_run',
+    'format' = 'json',
+    'scan.startup.mode' = 'group-offsets',
+    'properties.auto.offset.reset' = 'latest'
 );
 
-# 提交，插入数据，从Kafka表中读取数据插入到Doris中
-insert into doris_gc_log
-select 
-CURRENT_TIMESTAMP as dt, 
-SPLIT_INDEX(source, '/', 7) as project, 
-REGEXP_REPLACE(`message`,  '\r|\n|\t', '') as message
-from gc_log;
+# 配置Elasticsearch目标表
+CREATE TABLE es_run_log_02 (
+  `project` STRING,
+  `dt` TIMESTAMP,
+  `timestamp` STRING,
+  `level` STRING,
+  `thread` STRING,
+  `class` STRING,
+  `traceid` STRING,
+  `message` STRING,
+  `host` STRING
+  ) WITH (
+      'connector' = 'elasticsearch-6',
+      'document-type' = 'doc',
+      'hosts' = 'http://192.168.0.45:9200;http://192.168.0.46:9200;http://192.168.0.45:9200',
+      # Elasticsearch 中每条记录的索引。可以是一个静态索引（例如 'myIndex'）或一个动态索引（例如 'index-{log_ts|yyyy-MM-dd}'）。
+      # 如果你想使用动态索引，你可以使用 {field_name} 来引用记录中的字段值来动态生成目标索引。 你也可以使用 '{field_name|date_format_string}' 将 TIMESTAMP/DATE/TIME 类型的字段值转换为 date_format_string 指定的格式。 date_format_string 与 Java 的 DateTimeFormatter 兼容。 例如，如果选项值设置为 'myusers-{log_ts|yyyy-MM-dd}'，则 log_ts 字段值为 2020-03-27 12:25:55 的记录将被写入到 “myusers-2020-03-27” 索引中。
+      'index' = 'flink-logging-{dt|yyyy-MM-dd}'
+);
+
+insert into es_run_log_02
+  select
+  SPLIT_INDEX(source, '/', 7) as project,
+  `dt`,
+  `@timestamp`,
+  `level`,
+  `thread`,
+  `class`,
+  `traceid`,
+  REGEXP_REPLACE(`message`, '\r|\n|\t', '') as `message`,
+  host['name'] as podId
+  from run_log_02;
 ```
 ---
 ### Flink TaskManager 内存模型详解
@@ -110,18 +177,19 @@ from gc_log;
      ```bash
      参数设置
      taskmanager.memory.framework.heap.size：堆内部分(Framework Heap)，默认值 128M；
-     taskmanager.memory.framework.off-heap.size：堆外部分(Framework Off-Heap)，以直接内存形式分配，默认     值 128M。
+     taskmanager.memory.framework.off-heap.size：堆外部分(Framework Off-Heap)，以直接内存形式分配，默认值 128M。
      ```
 2. Task Heap
    > 含义描述: 用于 Flink 应用的算子及用户代码占用的内存。
      ```bash
      参数设置
      taskmanager.memory.task.heap.size：堆内部分(Task Heap)，无默认值，一般不建议设置，会自动用 Flink 总内存减去框架、托管、网络三部分的内存推算得出。
-     taskmanager.memory.task.off-heap.size：堆外部分(Task Off-Heap)，以直接内存形式分配，默认值为 0，即不使用。如果代码中需要调用 Native Method 并分配堆外内存，可以指定该参数。一般不使用，所以大多数时候可以保持     0。
+     taskmanager.memory.task.off-heap.size：堆外部分(Task Off-Heap)，以直接内存形式分配，默认值为 0，即不使用。如果代码中需要调用 Native Method 并分配堆外内存，可以指定该参数。一般不使用，所以大多数时候可以保持0。
      ```
 ### 堆外内存
 1. Managed Memory
    > 含义描述: 纯堆外内存，由 MemoryManager 管理，用于中间结果缓存、排序、哈希表等，以及 RocksDB 状态后端。可见，RocksDB消耗的内存可以由用户显式控制了，不再像旧版本一样难以预测和调节。
+  
      ```bash
      参数设置
      taskmanager.memory.managed.fraction：托管内存占 Flink 总内存 taskmanager.memory.flink.size 的比例，默认值 0.4；
@@ -129,14 +197,14 @@ from gc_log;
      ```
 2. Framework Off-Heap
    > 含义：用于 Flink 框架的堆外内存（直接内存或本地内存）（进阶配置）
-```bash
-taskmanager.memory.framework.off-heap.size
-```
+     ```bash
+     taskmanager.memory.framework.off-heap.size
+     ```
 3. Task Off-Heap
    > 含义：用于 Flink 应用的算计及用户代码的堆外内存（直接内存或本地内存）
-```bash
-taskmanager.memory.task.off-heap.size
-```
+     ```bash
+     taskmanager.memory.task.off-heap.size
+     ```
 4. Network
    > 含义描述: Network Memory 使用的是 Directory memory，在 Task 与 Task之间进行数据交换时（shuffle），需要将数据缓存下来，缓存能够使用的内存大小就是这个 Network Memory。它由是三个参数决定：
      ```bash
@@ -148,28 +216,33 @@ taskmanager.memory.task.off-heap.size
 ---
 1. JVM Metaspace
    > 含义描述: 从 JDK 8 开始，JVM 把永久代拿掉了。类的一些元数据放在叫做 Metaspace 的 Native Memory 中。在 Flink 中的 JVM Metaspace Memory 也一样，它配置的是 Task Manager JVM 的元空间内存大小。
-```bash
-参数设置
-taskmanager.memory.jvm-metaspace.size：默认值 256MB。
-```
+     ```bash
+     参数设置
+     taskmanager.memory.jvm-metaspace.size：默认值 256MB。
+     ```
 2. JVM Overhead
    > 含义描述: 保留给 JVM 其他的内存开销。例如：Thread Stack、code cache、GC 回收空间等等。和 Network Memory的配置方法类似。它也由三个配置决定
-```bash
-参数设置
-taskmanager.memory.jvm-overhead.min：JVM 额外开销的最小值，默认 192MB；
-taskmanager.memory.jvm-overhead.max：JVM 额外开销的最大值，默认 1GB；
-taskmanager.memory.jvm-overhead.fraction：JVM 额外开销占 TM 进程总内存
-taskmanager.memory.process.size（注意不是 Flink 总内存）的比例，默认值 0.1。若根据此比例算出的内存量比最小值小或比最大值大，就会限制到最小值或者最大值。
-```
+    ```bash
+    参数设置
+    taskmanager.memory.jvm-overhead.min：JVM 额外开销的最小值，默认 192MB；
+    taskmanager.memory.jvm-overhead.max：JVM 额外开销的最大值，默认 1GB；
+    taskmanager.memory.jvm-overhead.fraction：JVM 额外开销占 TM 进程总内存
+    taskmanager.memory.process.size（注意不是 Flink 总内存）的比例，默认值 0.1。若根据此比例算出的内存量比最小值小或比最大值大，就会限制到最小值或者最大值。
+    ```
 ---
 
-
-flink stop -m 127.0.0.1:8081 -s save_point_dir job_id 
-flink cancel -m 127.0.0.1:8081 -s save_point_dir job_id
-
-
-
-两者的区别
-- cancel() 调用
-立即调用作业算子的 cancel() 方法，以尽快取消它们。如果算子在接到 cancel() 调用后没有停止，Flink 将开始定期中断算子线程的执行，直到所有算子停止为止。
+### cancel和stop两者的区别
+- cancel() 调用，立即调用作业算子的 cancel() 方法，以尽快取消它们。如果算子在接到 cancel() 调用后没有停止，Flink 将开始定期中断算子线程的执行，直到所有算子停止为止。
 - stop() 调用，是更优雅的停止正在运行流作业的方式。stop() 仅适用于 source 实现了StoppableFunction 接口的作业。当用户请求停止作业时，作业的所有 source 都将接收 stop() 方法调用。直到所有 source 正常关闭时，作业才会正常结束。这种方式，使作业正常处理完所有作业。
+- 执行命令
+```bash
+flink stop -m 127.0.0.1:8081 -p save_point_dir job_id 
+flink cancel -m 127.0.0.1:8081 -p save_point_dir job_id
+
+flink run -p 3 -s <savepoint-path> --checkpointing --event-time
+```
+---
+### 参考信息
+- [配置 Flink 进程的内存](https://nightlies.apache.org/flink/flink-docs-release-1.18/zh/docs/deployment/memory/mem_setup/)
+- [Elasticsearch SQL 连接器](https://nightlies.apache.org/flink/flink-docs-release-1.18/zh/docs/connectors/table/elasticsearch/)
+- [FlinkSQL 总结](https://www.cnblogs.com/fanqisoft/p/18008618)

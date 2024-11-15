@@ -66,7 +66,7 @@ systemctl enable elasticsearch.service
   "mappings": {
     "properties": {
       "time_local": {
-        "format": "dd/MMM/yyyy:HH:mm:ss Z",
+        "": "dd/MMM/yyyy:HH:mm:ss Z",
         "type": "date"
       }
     }

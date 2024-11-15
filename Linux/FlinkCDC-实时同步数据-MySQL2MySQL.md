@@ -33,11 +33,16 @@
    ```
 2. 登陆MySQL创建用户，数据库，初始化表
    ```bash
+   CREATE USER 'user'@'localhost' IDENTIFIED BY 'password';
+   GRANT SELECT, SHOW DATABASES, REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO 'user' IDENTIFIED BY 'password';
+   FLUSH PRIVILEGES;
+
    create database flink_source;
    create database flink_sink;
    create database flink_sink_second;
 
-   use flink_source
+   use flink_source;
+
    CREATE TABLE source_test (
      user_id INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY,
      user_name VARCHAR(255) NOT NULL
@@ -49,12 +54,14 @@
    VALUES (default,"1234"),(default,"eds4f");
 
    use flink_sink;
+
    CREATE TABLE sink_test (
      user_id INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY,
      user_name VARCHAR(255) NOT NULL
    );
 
    use flink_sink_second;
+
    CREATE TABLE sink_test (
      user_id INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY,
      user_name VARCHAR(255) NOT NULL
@@ -124,6 +131,11 @@
    insert into sink_test_second select * from source_test;
    ```
 5. 同步至PG
+   - Postgres CDC连接器通过PostgreSQL数据库的逻辑复制读取CDC变更流数据，需要满足以下条件
+     - wal_level参数的值需设置为logical，即在预写式日志WAL（Write-ahead logging）中增加支持逻辑编码所需的信息。
+     - 执行ALTER TABLE schema.table REPLICA IDENTITY FULL;命令设置订阅表的REPLICA IDENTITY为FULL（发出的插入和更新操作事件包含表中所有列的旧值），以保障该表数据同步的一致性。(说明REPLICA IDENTITY是PostgreSQL特有的表级设置，它决定了逻辑解码插件在发生（INSERT）和更新（UPDATE）事件时，是否包含涉及的表列的旧值。REPLICA IDENTITY取值含义详情请参见REPLICA IDENTITY。)
+     - 需要确保max_wal_senders和max_replication_slots的参数值均大于当前数据库复制槽已使用数与Flink作业所需要的slot数量。
+     - 确保账户系统权限为SUPERUSER或者同时拥有LOGIN和REPLICATION权限，并且具有订阅表的SELECT权限用于全量数据查询。
    ```bash
    # PG中创建表
    CREATE TABLE sink_test (

@@ -18,6 +18,7 @@
    setenforce 0
    sed -i 's/^SELINUX=enforcing$/SELINUX=disabled/' /etc/selinux/config
    yum install -y kubelet-${VERSION} kubeadm-${VERSION} kubectl-${VERSION} ipvsadm ipset --disableexcludes=kubernetes
+   
    VERSION="19.03.12-3.el7"
    yum install -y docker-ce-$VERSION docker-ce-cli-$VERSION
    systemctl daemon-reload
@@ -119,7 +120,11 @@
    # 在新的添加控制节点执行
    kubeadm join $LOAD_BALANCER_DNS:$LOAD_BALANCER_PORT --token 9vr73a.a8uxyaju799qwdjv --discovery-token-ca-cert-hash sha256:7c2e69131a36ae2a042a339b33381c6d0d43887e2de83720eff5359e26aec866 --control-plane --certificate-key f8902e114ef118304e561c3ecd4d0b543adc226b7a07f675f56564185ffe0c07
    ```
-
+---
+1. docker 重启etcd、apiserver、controller-manager、scheduler组件
+```bash
+docker ps |grep -E 'k8s_kube-apiserver|k8s_kube-controller-manager|k8s_kube-scheduler|k8s_etcd_etcd' | awk -F ' ' '{print $1}' |xargs docker restart
+```
 
 ### 官方文档
 * [api版本为v1beta2](https://godoc.org/k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/v1beta2)
