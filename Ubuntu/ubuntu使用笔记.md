@@ -30,6 +30,38 @@
   systemctl daemon-reload
   systemctl restart docker
   ```
+### ubuntu 安装Nvidia的显卡驱动
+- 首先，检测 nvidia 显卡型号和推荐的驱动程序。
+  ```bash
+  ubuntu-drivers devices
+  # 输出内容，推荐安装nvidia-driver-550
+  == /sys/devices/pci0000:00/0000:00:16.0/0000:0b:00.0 ==
+  modalias : pci:v000010DEd00001EB0sv00001028sd0000129Fbc03sc00i00
+  vendor   : NVIDIA Corporation
+  model    : TU104GL [Quadro RTX 5000]
+  driver   : nvidia-driver-535-server - distro non-free
+  driver   : nvidia-driver-535 - distro non-free
+  driver   : nvidia-driver-535-open - distro non-free
+  driver   : nvidia-driver-545 - distro non-free
+  driver   : nvidia-driver-470 - distro non-free
+  driver   : nvidia-driver-470-server - distro non-free
+  driver   : nvidia-driver-550 - distro non-free recommended
+  driver   : nvidia-driver-545-open - distro non-free
+  driver   : nvidia-driver-535-server-open - distro non-free
+  driver   : nvidia-driver-418-server - distro non-free
+  driver   : nvidia-driver-550-open - third-party non-free
+  driver   : nvidia-driver-450-server - distro non-free
+  driver   : xserver-xorg-video-nouveau - distro free builtin
+
+  # 安装推荐驱动
+  ubuntu-drivers install
+
+  # 选择其他驱动
+  sudo dpkg -P $(dpkg -l | grep nvidia-driver | awk '{print $2}')
+  sudo apt autoremove
+  # 卸载驱动
+  dpkg -P $(dpkg -l | grep nvidia-driver | awk '{print $2}')
+  ```
 ---
 ### 参考连接
 - [V2Ray 配置指南](https://toutyrater.github.io/advanced/outboundproxy.html)

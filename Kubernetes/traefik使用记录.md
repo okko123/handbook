@@ -1,25 +1,42 @@
 ## traefik使用记录
+- traefik 3.3
+- helm 3.17.1
+- kubernetes 1.28.15
+---
 ### 在kubernetes集群中部署
-- 使用helm工具进行安装部署，要求：kubernetes集群的版本为1.14+
+- 使用helm工具进行安装部署，要求：kubernetes集群的版本为1.22+，hel版本为：3.9+
   ```bash
-  wget https://get.helm.sh/helm-v3.2.4-linux-amd64.tar.gz
-  tar xf helm-v3.2.4-linux-amd64.tar.gz
+  wget https://get.helm.sh/helm-v3.17.1-linux-amd64.tar.gz
+  tar xf helm-v3.17.1-linux-amd64.tar.gz
   cd linux-amd64
   ./helm repo add traefik https://traefik.github.io/charts
   ./helm repo update
   ./helm install traefik traefik/traefik --namespace=traefik
   ```
-### 查看traefik的控制面板
-```bash
-# 将traefik的9000端口映射到宿主的8888端口
-kubectl port-forward pod/pod_name --address 192.168.1.1 8888:9000 -n traefik
-# 在浏览器中打开http://192.168.1.1:8888/dashboard/#/
-```
-### 配置ingress
+---
 ### 配置ingressroute
+- 配置路由访问dashboard
+  ```yaml
+  apiVersion: traefik.io/v1alpha1
+  kind: IngressRoute
+  metadata:
+    name: traefik-dashboard
+  spec:
+    routes:
+    - match: PathPrefix(`/dashboard`)
+      kind: Rule
+      services:
+      - name: api@internal
+        kind: TraefikService
+    - match: PathPrefix(`/api`)
+      kind: Rule
+      services:
+      - name: api@internal
+        kind: TraefikService
+  ```
 - 通过header头部，区分流量到不通的namespace中，注意service的名字不能相同
   ```yaml
-  apiVersion: traefik.containo.us/v1alpha1
+  apiVersion: traefik.io/v1alpha1
   kind: IngressRoute
   metadata:
     name: test-gateway-ingress
@@ -49,6 +66,17 @@ kubectl port-forward pod/pod_name --address 192.168.1.1 8888:9000 -n traefik
         responseForwarding:
           flushInterval: 100ms
   ```
+### 查看traefik的控制面板
+- 9100端口为prometheus的数据采集
+- 8080端口
+- 8000端口为http web协议
+- 8443端口为https web协议
+```bash
+# 将traefik的9000端口映射到宿主的8888端口
+kubectl port-forward pod/pod_name --address 192.168.1.1 8888:8000 -n traefik
+# 在浏览器中打开http://192.168.1.1:8888/dashboard/#/
+```
+
 ### 接入consul做服务发现
 - 在traefik的deployment中的spec.template.spec.containers.args添加
   ```bash
@@ -59,8 +87,8 @@ kubectl port-forward pod/pod_name --address 192.168.1.1 8888:9000 -n traefik
 - 登录traefik面板检查。
   ```bash
   # 在k8s中通过port-forward 进行端口暴露
-  kubectl port-forward $(kubectl get pods --selector "app.kubernetes.io/name=traefik" --output=name) 9000:9000
-  访问 ip:9000/dashboard/
+  kubectl port-forward $(kubectl get pods --selector "app.kubernetes.io/name=traefik" --output=name) 8000:8000
+  访问 ip:8000/dashboard/
   ```
 - 测试
   ```bash

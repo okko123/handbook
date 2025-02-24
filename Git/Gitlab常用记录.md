@@ -57,8 +57,18 @@ user = User.find_by(username: 'my_username')
 user.admin = true
 user.save!
 ```
+## 设置时区
+> 默认情况下，gitlab使用UTC时间，因此备份的时候可能出现文件名日期与当前日期不一致的问题
+```bash
+vim /etc/gitlab/gitlab.rb
+gitlab_rails['time_zone'] = 'Asia/Shanghai'
+
+sudo gitlab-ctl reconfigure
+sudo gitlab-ctl restart
+```
 ---
 ## 参考连接
 - [gitlab备份](https://docs.gitlab.com/ce/raketasks/backup_restore.html)
 - [gitlab恢复](https://docs.gitlab.com/ce/raketasks/backup_restore.html#restore)
 - [Sign-in restrictions](https://docs.gitlab.com/ee/user/admin_area/settings/sign_in_restrictions.html
+- [Change your time zone](https://docs.gitlab.com/ee/administration/timezone.html)

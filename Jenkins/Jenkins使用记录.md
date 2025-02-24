@@ -45,6 +45,10 @@ Jenkins.instance.allItems.each() {
   item.updateNextBuildNumber(1)
 }  
 
+
+更改单个job的下一个序号：
+Jenkins.instance.getItemByFullName("YourJobName").updateNextBuildNumber(45)
+
 ### 配置smtp发送邮件
 系统管理 -> 配置
 - 配置：系统管理员邮件地址

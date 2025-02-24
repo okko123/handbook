@@ -17,7 +17,7 @@
 ```bash
 # OpenVPN在epel源中，因此需要安装EPEL源
 wget -O /etc/yum.repos.d/epel.repo https://mirrors.aliyun.com/repo/epel-7.repo
-yum cleanall
+yum clean all
 yum makecache
 
 # 安装openvpn、证书生成工具
@@ -211,7 +211,7 @@ apt install -y openvpn easy-rsa
 /usr/share/easy-rsa/easyrsa init-pki
 /usr/share/easy-rsa/easyrsa build-ca nopass
 /usr/share/easy-rsa/easyrsa build-server-full server nopass
-/usr/share/easy-rsa/easyrsa build-server-full client1 nopass
+/usr/share/easy-rsa/easyrsa build-client-full client1 nopass
 
 /usr/share/easy-rsa/easyrsa gen-dh
 openvpn --genkey --secret ta.key

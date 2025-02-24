@@ -48,6 +48,12 @@ EOF
 
 #查看同步状态
 chronyc sources -v
+
+# 查看本机时间同步状态
+chronyc tracking
+
+# 查看正在使用的时间服务器状态
+chronyc -n sourcestats -v
 ```
 
 * 参考资料
