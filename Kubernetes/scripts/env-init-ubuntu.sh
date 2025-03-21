@@ -30,6 +30,7 @@ sed -i "s#registry.k8s.io#registry.cn-hangzhou.aliyuncs.com/google_containers#g"
 sed -i 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.toml
 systemctl daemon-reload
 systemctl restart containerd --now
+systemctl enable containerd
 
 cat > /etc/crictl.yaml <<EOF
 runtime-endpoint: unix:///run/containerd/containerd.sock
@@ -41,7 +42,16 @@ EOF
 apt-get remove docker docker-engine docker.io
 apt-get install apt-transport-https ca-certificates curl gnupg2 software-properties-common
 
-#安装k8s组件
+#安装k8s组件，1.28版本
+apt-get update && apt-get install -y apt-transport-https
+curl -fsSL https://mirrors.aliyun.com/kubernetes-new/core/stable/v1.28/deb/Release.key |
+    gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://mirrors.aliyun.com/kubernetes-new/core/stable/v1.28/deb/ /" |
+    tee /etc/apt/sources.list.d/kubernetes.list
+apt-get update
+apt-get install -y kubelet kubeadm kubectl
+
+# 1.24版本以前
 curl https://mirrors.aliyun.com/kubernetes/apt/doc/apt-key.gpg | apt-key add - 
 cat <<EOF >/etc/apt/sources.list.d/kubernetes.list
 deb https://mirrors.aliyun.com/kubernetes/apt/ kubernetes-xenial main

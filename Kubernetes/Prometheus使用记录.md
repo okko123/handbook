@@ -92,10 +92,76 @@ prom/prometheus:v2.19.2 \
   # 在spec下添加，retention: 30d，配置保存数据时间为30天
   kubectl edit prometheus -n monitoring k8s
   ```
-https://github.com/prometheus-operator/prometheus-operator/blob/0e6ed120261f101e6f0dc9581de025f136508ada/Documentation/prometheus.md
+- https://github.com/prometheus-operator/prometheus-operator/blob/0e6ed120261f101e6f0dc9581de025f136508ada/Documentation/prometheus.md
 - 修改Prometheus的启动参数
   - 在启动参数中添加--storage.tsdb.retention.time=STORAGE.TSDB.RETENTION.TIME，指定保留数据的时间长度。默认保存15天，支持的单位U: y, w, d, h, m, s, ms.
 
 ### 调整告警规则
 1. kafka的topic消息延迟告警。按照consumergroup, topic分类。且把anonyous.开头的消费组排除
 sum(kafka_consumergroup_lag{consumergroup !~ "anonymous.*"}) by (consumergroup, topic)
+---
+### 使用外部alertmanager
+- [Kubernetes 映射外部服务](https://cloud.tencent.com/developer/article/1755667)
+  ```bash
+  cat > alertmanager-extral.yaml <<"EOF"
+  kind: Endpoints
+  apiVersion: v1
+  metadata:
+    name: alertmanager-extral
+    namespace: monitoring
+  subsets:
+    - addresses:
+      - ip: 192.168.0.1
+      ports:
+        - port: 9093
+  ---
+  kind: Service
+  apiVersion: v1
+  metadata:
+    name: alertmanager-extral
+    namespace: monitoring
+  spec:
+    ports:
+      - port: 9093
+        name: web
+  EOF
+
+  kubectl apply -f alertmanager-extral.yaml
+
+  # 编辑Prometheus配置，将alertmanager-main，替换为上面的alertmanager-extral
+  kubectl edit prometheus -n monitoring k8s
+  # 重启Prometheus
+  kubectl rollout restart statefulset -n monitoring prometheus-k8s
+  ```
+---
+### 添加新的告警规则
+- 添加node节点load5 每核心负载高于2持续2分钟的告警规则
+  ```bash
+  kubectl edit prometheusrule -n monitoring node-exporter-rules
+
+  - alert: NodeLoadOver
+    expr: |
+      (
+        node_load5 / count without (cpu, mode) (node_cpu_seconds_total{mode="system"}) > 2
+      )
+    for: 2m
+    labels:
+      severity: critical
+  ```
+---
+### 0.14版本添加网络策略
+- 新版版本添加了NetworkPolicy规则，导致其他节点无法直接访问Prometheus的容器，只允许运行容器的宿主机访问。需要手动删除或者修改NetworkPolicy规则
+  ```bash
+  kubectl get NetworkPolicy  -A
+  NAMESPACE    NAME                  POD-SELECTOR                                                                                                                                             AGE
+  monitoring   alertmanager-main     app.kubernetes.io/component=alert-router,app.kubernetes.io/instance=main,app.kubernetes.io/name=alertmanager,app.kubernetes.io/part-of=kube-prometheus   52m
+  monitoring   blackbox-exporter     app.kubernetes.io/component=exporter,app.kubernetes.io/name=blackbox-exporter,app.kubernetes.io/part-of=kube-prometheus                                  52m
+  monitoring   grafana               app.kubernetes.io/component=grafana,app.kubernetes.io/name=grafana,app.kubernetes.io/part-of=kube-prometheus                                             52m
+  monitoring   kube-state-metrics    app.kubernetes.io/component=exporter,app.kubernetes.io/name=kube-state-metrics,app.kubernetes.io/part-of=kube-prometheus                                 52m
+  monitoring   node-exporter         app.kubernetes.io/component=exporter,app.kubernetes.io/name=node-exporter,app.kubernetes.io/part-of=kube-prometheus                                      52m
+  monitoring   prometheus-adapter    app.kubernetes.io/component=metrics-adapter,app.kubernetes.io/name=prometheus-adapter,app.kubernetes.io/part-of=kube-prometheus                          52m
+  monitoring   prometheus-k8s        app.kubernetes.io/component=prometheus,app.kubernetes.io/instance=k8s,app.kubernetes.io/name=prometheus,app.kubernetes.io/part-of=kube-prometheus        52m
+  monitoring   prometheus-operator   app.kubernetes.io/component=controller,app.kubernetes.io/name=prometheus-operator,app.kubernetes.io/part-of=kube-prometheus                              52m
+  ```
+  ---
+  - [网络策略](https://kubernetes.io/zh-cn/docs/concepts/services-networking/network-policies/)

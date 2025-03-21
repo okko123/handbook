@@ -13,6 +13,62 @@
   ./helm repo update
   ./helm install traefik traefik/traefik --namespace=traefik
   ```
+- 创建deployment测试
+  ```bash
+  cat > whoami.yaml <<'EOF'
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: whoami-deployment
+    labels:
+      app: whoami
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: whoami
+    template:
+      metadata:
+        labels:
+          app: whoami
+      spec:
+        containers:
+        - name: whoami
+          image: traefik/whoami:v1.10
+          ports:
+          - containerPort: 80
+  ---
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: whoami-service
+  spec:
+    selector:
+      app: whoami
+    ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  ---
+  apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    name: whoami-ingress
+  spec:
+    ingressClassName: traefik
+    rules:
+    - http:
+        paths:
+        - path: /test
+          pathType: Prefix
+          backend:
+            service:
+              name: whoami-service
+              port:
+                number: 80
+  EOF
+  kubectl apply -f whoami.yaml
+  ```
 ---
 ### 配置ingressroute
 - 配置路由访问dashboard

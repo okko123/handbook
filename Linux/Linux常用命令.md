@@ -39,6 +39,12 @@ dmidecode -s system-product-name
   ```
 * 使用nmtui进行集合
 ---
+* base64命令
+  ```bash
+  # 因为这个历史原因，很多工具，包括 linux 常用的 base64 命令行工具，都保留了 76 字符后换个行的行为。如果不想要换行符，可以通过 -w 0 参数来取消。
+  echo -n "apfjxkic-omyuobwd339805ak:60a06cd2ddfad610b9490d359d605407" | base64 -w 0
+  ```
+---
 ### 参考信息
 * http://www.361way.com/nmcli-bond-teamd/4837.html
 * https://access.redhat.com/documentation/zh_cn/red_hat_enterprise_linux/7/html/networking_guide/sec-configure_teamd_runners

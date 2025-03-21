@@ -86,6 +86,7 @@ sed -i  '/registry.mirrors/a\        [plugins."io.containerd.grpc.v1.cri".regist
 
 systemctl daemon-reload
 systemctl restart containerd --now
+systemctl enable containerd
 
 # 注意，需要修改baseurl和gpgkey的版本号，当前版版本为1.30
 cat <<EOF | tee /etc/yum.repos.d/kubernetes.repo

@@ -1,5 +1,4 @@
 ## ffmpeg使用记录
-
 - FFmpeg 命令的典型语法是：
   > ffmpeg [全局选项] {[输入文件选项] -i 输入_url_地址} ... {[输出文件选项] 输出_url_地址} ...
 - 获取音频/视频文件信息
@@ -37,6 +36,14 @@
     ffmpeg -i input.mkv -i subtitles.ass -codec copy -map 0 -map 1 output.mkv
     ffmpeg -i infile.mp4 -f srt -i infile.srt -c:v copy -c:a copy -c:s mov_text outfile.mp4
 
+    ## 嵌入多个字幕
+    ffmpeg -i Mieruko-chan.mkv -i Mieruko-chan.chs.ass -i Mieruko-chan.cht.ass \
+    -c:v copy -c:a copy -c:s copy \
+    -map 0:v -map 0:a -map 1 -map 2 \
+    -metadata:s:s:0 language=chs \
+    -metadata:s:s:1 language=cht \
+    output.mkv
+
     # 添加标题
     ffmpeg -i input.mkv -i subtitles.ass -codec copy -map 0 -map 1 -metadata:s:s:0 title=中文 language=zho output.mkv
     ```
@@ -44,6 +51,31 @@
     ```bash
     ffmpeg -i input.mp4 -vf "subtitles=subtitle.srt" output.mp4
     ```
+- ffmpeg将eac3音频转换成aac编码
+  ```bash
+  ffmpeg -i Bluey.S01E01.1080p.WEB.h264-SALT.mkv -map 0 -c:v copy -c:a aac -c:s copy -y Bluey.S01E01.1080p.aac.WEB.h264-SALT.mkv
+  ```
+- ffmpeg提取视频、音频、字幕。使用 -map 实现流提取
+  ```bash
+  # 提取视频流
+  ffmpeg -i input.mkv -map 0:v output.mkv
+
+  # 提取全部的音频流
+  ffmpeg -i input.mkv -map 0:a output.m4a
+
+  ## 导出指定的音频流，比如导出序号为 0 的音频流
+  ffmpeg -i input.mkv -map 0:a:0 output.
+  
+  ## 也可以显示指定导出多个音频流
+  ffmpeg -i input.mkv \
+  -map 0:a:0 \
+  -map 0:a:1 \
+  output.m4a
+
+  # 提取字幕
+  ffmpeg -i input.mkv -map 0:s:0 output.srt
+  ```
+
 ---
 ### 参考连接
 - [给新手的 20 多个 FFmpeg 命令示例](https://zhuanlan.zhihu.com/p/67878761)
@@ -52,3 +84,5 @@
 - [ffmpeg嵌入字幕](https://crifan.github.io/media_process_ffmpeg/website/subtitle/embed/)
 - [FFmpeg+Aegisub实现“视频转码自由”](https://zhuanlan.zhihu.com/p/501830892)
 - [ffmpeg文档](https://ffmpeg.org/ffmpeg.html)
+- [ffmpeg 提取音视频及字幕](https://zhuanlan.zhihu.com/p/677539168)
+- [ffmpeg 视频字幕](https://zhuanlan.zhihu.com/p/677539095)

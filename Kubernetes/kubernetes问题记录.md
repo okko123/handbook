@@ -6,6 +6,7 @@
   ```bash
   # 将mode的值修改为ipvs
   kubectl edit configmap -n kube-system kube-proxy
+  kubectl rollout restart -n kube-system daemonset/kube-proxy
 
   # 修改完毕后需要重启所有kube-proxy的容器
   for pod in `kubectl get pods -n kube-system|grep kube-proxy|awk '{print $1}'`
