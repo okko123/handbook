@@ -109,7 +109,7 @@
     enabled: false
    EOF
 
-   helm install kong-cp kong/kong -n kong --values ./values-cp.yaml
+   helm install kong-cp kong/kong -n kong --values ./cp-3.4.yaml
 
    cat > dp-3.4.yaml <<"EOF"
    # Do not use Kong Ingress Controller

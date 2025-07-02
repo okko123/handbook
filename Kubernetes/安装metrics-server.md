@@ -6,7 +6,15 @@
 
 ## 安装过程
 ```bash
-kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.3.6/components.yaml
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.7.2/components.yaml
+
+kubectl edit deployment -n kube-system metrics-server
+# 在containers.args下添加一下参数
+# --kubelet-insecure-tls
+
+# 拉取镜像
+docker pull dyrnq/metrics-server:v0.7.2
+docker tag dyrnq/metrics-server:v0.7.2 registry.k8s.io/metrics-server/metrics-server:v0.7.2
 ```
 ## 验证方法
 ```bash

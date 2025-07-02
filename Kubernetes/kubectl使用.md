@@ -110,6 +110,8 @@ kubectl get -n namespace deployement test-deployment -o yaml
        echo $VERSION || echo "no version"
        kubectl set image -n namespace deployment/${i} ${i}=${VERSION}
    done
+
+   kubectl patch deployment deployment_name --patch '{"spec": {"template": {"spec": {"containers": [{"name": "nginx", "image":"image.docker.com/nginx/nginx:v1"}]}}}}'
    ```
 ### 更新指定namespace中，deployment的副本数量
    ```bash
@@ -151,4 +153,13 @@ kubectl create ingress echo --class=kong --rule="echo.qdama.test/*=echo:8080"
 ### 获取所有deployment的资源限制
 ```bash
 kubectl get deployment -o=jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.template.spec.containers[0].resources.limits}{"\n"}{end}'
+```
+### 获取节点最大可容纳pod的数量
+```bash
+kubectl get node <node_name> -ojsonpath='{.status.capacity.pods}'
+```
+### 更新镜像的拉取策略
+```bash
+kubectl patch deployment abc-service --patch '{"spec": {"template": {"spec": {"containers": [{"name": "abc-service", "imagePullPolicy": "IfNotPresent "}]}}}}'
+IfNotPresent
 ```

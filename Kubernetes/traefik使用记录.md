@@ -13,7 +13,7 @@
   ./helm repo update
   ./helm install traefik traefik/traefik --namespace=traefik
   ```
-- 创建deployment测试
+- 创建deployment、svc、ingress测试
   ```bash
   cat > whoami.yaml <<'EOF'
   apiVersion: apps/v1
@@ -122,6 +122,92 @@
         responseForwarding:
           flushInterval: 100ms
   ```
+- 使用正则方法配置Middleware和IngressRounte配置
+   1. 配置Middleware
+      ```bash
+      cat > regex.yaml <<EOF
+      apiVersion: traefik.io/v1alpha1
+      kind: Middleware
+      metadata:
+        name: test-stripprefixregex
+        namespace: default
+      spec:
+        stripPrefixRegex:
+          regex:
+          - /test/[a-z]+/
+      EOF
+      ```
+   2. 配置ingressrounte
+      ```bash
+      cat > ingress.yaml <<EOF
+      apiVersion: traefik.io/v1alpha1
+      kind: IngressRoute
+      metadata:
+        name: test-gateway-ingress
+        namespace: default
+      spec:
+        entryPoints:
+        - web
+        - metrics
+        routes:
+        - kind: Rule
+          match: Host(`test.exmple.com`) && PathPrefix(`/test/wechat/`)
+          middlewares:
+          - name: test-stripprefixregex
+          services:
+          - name: wechat-service-8080
+            namespace: default
+            port: 8080
+      EOF
+
+      kubectl apply -f ingress.yaml
+      ```
+### traefik 路径切除
+- 将/test/abc/new中的/test/abc路径切除，实现后端接收的请求为/new
+1. 使用prefix的具体配置
+   1. 配置Middleware
+      ```bash
+      cat > traefik-stripprefix.yaml <<EOF
+      apiVersion: traefik.io/v1alpha1
+      kind: Middleware
+      metadata:
+        name: test-stripprefix
+        namespace: default
+      spec:
+        stripPrefix:
+          prefixes:
+            - /test/abc/
+            - /test/qwe/
+      EOF
+
+      kubectl apply -f traefik-stripprefix.yaml
+      ```
+   2. 配置ingress
+      ```bash
+      cat > ingress.yaml <<EOF
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        annotations:
+          traefik.ingress.kubernetes.io/router.middlewares: namespace-test-stripprefix@kubernetescrd
+        name: test-gateway-ingress
+        namespace: default
+      spec:
+        ingressClassName: traefik
+        rules:
+        - host: test.example.com
+          http:
+            paths:
+            - path: /test/wechat/
+              backend:
+                service:
+                  name: wechat-service-8080
+                  port:
+                    number: 8080
+      EOF
+
+      kubectl apply -f ingress.yaml
+      ```
 ### 查看traefik的控制面板
 - 9100端口为prometheus的数据采集
 - 8080端口
@@ -150,7 +236,7 @@ kubectl port-forward pod/pod_name --address 192.168.1.1 8888:8000 -n traefik
   ```bash
   curl -H host:service-name http://traefik-ip:port
   ```
-  ---
+---
 ## 参考文档
 - [官方文档-路由](https://docs.traefik.io/routing/routers/#configuration-example)
 - [中文翻译文档](https://docs.traefik.cn/toml#kubernetes-ingress-backend)
