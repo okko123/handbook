@@ -21,7 +21,7 @@ server {
     ssl_ciphers  HIGH:!aNULL:!MD5;
     ssl_prefer_server_ciphers on;
 
-    server_name  ltb.qdama.cn;
+    server_name  ltb..cn;
     index        index.htm index.html index.php;
     root         /data/app/ltb-1.3;
 

@@ -107,7 +107,7 @@ docker run \
 --volume /data/pdns-auth:/var/lib/powerdns \
 --volume /data/pdns-auth/conf:/etc/powerdns/pdns.d \
 --name pdns-auth \
---hostname pdns-auth.qdama.int \
+--hostname pdns-auth.example.int \
 -p 8082:8082/tcp \
 -p 8081:8081/tcp \
 -p 53:53/tcp \

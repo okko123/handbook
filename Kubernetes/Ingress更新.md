@@ -14,7 +14,7 @@
   spec:
     ingressClassName: kong
     rules:
-    - host: echo.qdama.test
+    - host: echo.example.test
       http:
         paths:
         - backend:

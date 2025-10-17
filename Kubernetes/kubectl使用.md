@@ -148,7 +148,7 @@ kubectl port-forward --namespace=ingress-nginx service/ingress-nginx-controller 
 ```bash
 kubectl create deployment echo --image=e2eteam/echoserver:2.2 --port=8080
 kubectl expose deployment echo
-kubectl create ingress echo --class=kong --rule="echo.qdama.test/*=echo:8080"
+kubectl create ingress echo --class=kong --rule="echo.example.test/*=echo:8080"
 ```
 ### 获取所有deployment的资源限制
 ```bash
