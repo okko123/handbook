@@ -161,5 +161,16 @@ kubectl get node <node_name> -ojsonpath='{.status.capacity.pods}'
 ### 更新镜像的拉取策略
 ```bash
 kubectl patch deployment abc-service --patch '{"spec": {"template": {"spec": {"containers": [{"name": "abc-service", "imagePullPolicy": "IfNotPresent "}]}}}}'
-IfNotPresent
+
+# 使用yaml文件方式更新
+cat > patch.yaml <<EOF
+spec:
+  template:
+    spec:
+      containers:
+      - name: abc-service
+        imagePullPolicy: IfNotPresent
+EOF
+
+kubectl patch deployment abc-service --patch-file patch.yaml
 ```

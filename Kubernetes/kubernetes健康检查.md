@@ -1,7 +1,8 @@
 ## Pod健康检查（LivenessProbe和ReadinessProbe）
-- LivenessProbe:用于判断容器是否存活（running状态），如果LivenessProbe探针探测到容器不健康，则kubelet杀掉该容器，并根据容器的重启策略做相应的处理。如果一个容器不包含LivenessProbe探针，则kubelet认为该容器的LivenessProbe探针返回的值永远是“Success”。
+- StartupProbe: 启动探针检查容器内的应用是否已启动。 启动探针可以用于对慢启动容器进行存活性检测，避免它们在启动运行之前就被 kubelet 杀掉。如果配置了这类探针，它会禁用存活检测和就绪检测，直到启动探针成功为止。这类探针仅在启动时执行，不像存活探针和就绪探针那样周期性地运行。
+- LivenessProbe: 用于判断容器是否存活（running状态），如果LivenessProbe探针探测到容器不健康，则kubelet杀掉该容器，并根据容器的重启策略做相应的处理。如果一个容器不包含LivenessProbe探针，则kubelet认为该容器的LivenessProbe探针返回的值永远是“Success”。
 - ReadinessProbe：用于判断容器是否启动完成（ready状态），可以接收请求。如果ReadinessProbe探针检测到失败，则Pod的状态被修改。Endpoint Controller将从Service的Endpoint中删除包含该容器所在Pod的Endpoint。
-
+> 启动探针（startupprobe），在启动探针完成后，存活探针和就绪探针才开始工作。由于存活和就绪探针之间没有关系，所以它们没有优先级区别，即在启动探针Success后，它们两个同时开始检测。有任何一个失败就慧执行其对应的失败处理动作。
 ### LivenessProbe三种实现方式： 
 1. HTTP GET探针对容器的ip地址（指定端口和路径）执行HTTP GET请求。响应状态码是2xx或3xx则探测成功。
 2. TCP套接字探针尝试建立TCP连接，成功建立则成功。
@@ -23,6 +24,41 @@ periodSeconds：执行探测的时间间隔（单位是秒）。默认是 10 秒
 
 - 对于 HTTP 探测，kubelet 发送一个 HTTP 请求到指定的路径和端口来执行检测。 除非 httpGet 中的 host 字段设置了，否则 kubelet 默认是给 Pod 的 IP 地址发送探测。 如果 scheme 字段设置为了 HTTPS，kubelet 会跳过证书验证发送 HTTPS 请求。 大多数情况下，不需要设置host 字段。 这里有个需要设置 host 字段的场景，假设容器监听 127.0.0.1，并且 Pod 的 hostNetwork 字段设置为了 true。那么 httpGet 中的 host 字段应该设置为 127.0.0.1。 可能更常见的情况是如果 Pod 依赖虚拟主机，你不应该设置 host 字段，而是应该在 httpHeaders 中设置 Host。
 - 对于一次 TCP 探测，kubelet 在节点上（不是在 Pod 里面）建立探测连接， 这意味着你不能在 host 参数上配置服务名称，因为 kubelet 不能解析服务名称。
+### 使用patch方式批量更新deployment配置
+```bash
+# 更新livenessProbe探针、startupProbe探针和更新镜像拉取策略
+cat > patch.yaml <<EOF
+spec:
+  template:
+    spec:
+      containers:
+      - name: ABC
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 10
+          initialDelaySeconds: 60
+          periodSeconds: 60
+          successThreshold: 1
+          timeoutSeconds: 3
+        startupProbe:
+          failureThreshold: 10
+          initialDelaySeconds: 60
+          periodSeconds: 60
+          successThreshold: 1
+          tcpSocket:
+            port: 8080
+          timeoutSeconds: 3
+EOF
+
+for i in `kubectl  get deployment --no-headers |awk '{print $1}'`
+do
+  echo $i;
+  cp patch.yaml 1.yaml
+  sed -i "s|ABC|${i}|g" 1.yaml
+  kubectl patch deployment ${i} --patch-file 1.yaml
+  sleep 60
+done
+```
 ---
 ## 参考连接
 [配置存活、就绪和启动探测器](https://v1-18.docs.kubernetes.io/zh/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-readiness-probes)

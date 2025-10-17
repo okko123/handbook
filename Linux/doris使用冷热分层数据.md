@@ -39,6 +39,15 @@
    PROPERTIES(
        "storage_policy" = "test_policy"
    );
+
+   # 参考资源
+   SHOW RESOURCES
+
+   # 修改OSS的AK、SK
+    ALTER RESOURCE remote_oss properties (
+    "s3.access_key"="LTxxxxxxxxxxx",
+    "s3.secret_key"="ETxxxxxxxxxxx"
+    );
    ```
 
 ### 检查数据，冷数据占用对象大小
@@ -188,11 +197,57 @@ COLUMNS(callStack, dt=now(3),source,project=split_part(source,'/', 8))
 
    > 数据文件合并完成后，没有物理删除的旧数据
    ```sql
+   # 查看垃圾数据
+   show trash
+
    # 清理所有BE节点的垃圾数据
    admin clean trash
    
    # 清理指定BE节点的垃圾数据
    admin clean trash on ("backendhost1:backendbeatport1","backendhost2:backendbeatport2")
+   ```
+8. 数据副本管理
+   ```bash
+   # 通过以下命令可以查看集群当前的负载情况：
+   SHOW PROC '/cluster_balance/cluster_load_stat/location_default/HDD';
+   SHOW PROC '/cluster_balance/cluster_load_stat/location_default/SSD';
+
+   # 查看当前各个节点的 slot 使用情况：
+   SHOW PROC '/cluster_balance/working_slots';
+
+   # 查看正在运行的任务
+   SHOW PROC '/cluster_balance/running_tablets';
+
+   # 查看已结束任务
+   SHOW PROC '/cluster_balance/history_tablets';
+
+   # 在be的配置中指定ssd介质后，建表的时候默认的storage_media指定HDD，导致数据只能在指定节点上存储，自平衡失效
+   
+   # 如果集群只有一种介质比如都是 HDD 或者都是 SSD，最佳实践是不用在 be.conf 中显式指定介质属性。如果遇到上述报错Failed to find enough host with storage medium and tag，一般是因为 be.conf 中只配置了 SSD 的介质，而建表阶段中显式指定了properties {"storage_medium" = "hdd"}；同理如果 be.conf 只配置了 HDD 的介质，而而建表阶段中显式指定了properties {"storage_medium" = "ssd"}也会出现上述错误。解决方案可以修改建表的 properties 参数与配置匹配；或者将 be.conf 中 SSD/HDD 的显式配置去掉即可。
+   ```
+9. 节点处理
+   ```bash
+   # 增加FE节点
+   ALTER SYSTEM ADD FOLLOWER "follower_host:edit_log_port"
+
+   # 删除FE节点
+   ALTER SYSTEM DROP FOLLOWER "follower_host:edit_log_port"
+
+   # 增加BE节点
+   ALTER SYSTEM ADD BACKEND "host:heartbeat_port"[,"host:heartbeat_port"...];
+
+   # 删除BE节点
+   ALTER SYSTEM DECOMMISSION BACKEND "host:heartbeat_port"[,"host:heartbeat_port"...];
+
+
+   # 节点故障处理
+   1. 对于 FE 节点故障，如果无法快速定位故障原因，一般需要保留线程快照和内存快照后重启进程。可以通过如下命令保存FE的线程快照：
+     1. jstack 进程ID >> 快照文件名.jstack
+     2. 通过以下命令保存 FE 的内存快照：
+        jmap -dump:live,format=b,file=快照文件名.heap 进程ID
+   2. 在版本升级或一些意外场景下，FE 节点的 image 可能出现元数据异常，并且可能出现异常的元数据被同步到其它 FE 的情况，导致所有 FE 不可工作。一旦发现 image 出现故障，最快的恢复方案是使用 Recovery 模式停止 FE 选举，并使用备份的 image 替换故障的 image。当然，时刻备份 image 并不是容易的事情，鉴于该故障常见于集群升级，我们建议在集群升级的程序中，增加简单的本地 image 备份逻辑，保证每次升级拉起 FE 进程前会保留一份当前最新的 image 数据。
+   3. 对于 BE 节点故障，如果是进程崩溃，会产生 core 文件，且 minos 会自动拉取进程；如果是任务卡住，则需要通过以下命令保留线程快照后重启进程：
+      1. pstack 进程ID >> 快照文件名.pstack
    ```
 ---
 ### 参考连接
@@ -201,45 +256,3 @@ COLUMNS(callStack, dt=now(3),source,project=split_part(source,'/', 8))
 - [ALTER-TABLE-PARTITION修改表分区属性](https://doris.apache.org/zh-CN/docs/sql-manual/sql-reference/Data-Definition-Statements/Alter/ALTER-TABLE-PARTITION)
 - [ALTER-TABLE-PROPERTY修改表属性](https://doris.apache.org/zh-CN/docs/sql-manual/sql-reference/Data-Definition-Statements/Alter/ALTER-TABLE-PROPERTY)
 ---
-
-SHOW PROC '/cluster_balance/cluster_load_stat/location_default/HDD';
-SHOW PROC '/cluster_balance/cluster_load_stat/location_default/ssd';
-
-SHOW PROC '/cluster_balance/working_slots';
-
-
-SHOW PROC '/cluster_balance/running_tablets';
-
-
-在be的配置中指定ssd介质后，建表的时候默认的storage_media指定HDD，导致数据只能在指定节点上存储，自平衡失效
-如果集群只有一种介质比如都是 HDD 或者都是 SSD，最佳实践是不用在 be.conf 中显式指定介质属性。如果遇到上述报错Failed to find enough host with storage medium and tag，一般是因为 be.conf 中只配置了 SSD 的介质，而建表阶段中显式指定了properties {"storage_medium" = "hdd"}；同理如果 be.conf 只配置了 HDD 的介质，而而建表阶段中显式指定了properties {"storage_medium" = "ssd"}也会出现上述错误。解决方案可以修改建表的 properties 参数与配置匹配；或者将 be.conf 中 SSD/HDD 的显式配置去掉即可。
-https://doris.apache.org/zh-CN/docs/2.0/faq/install-faq?_highlight=ssd#q7-%E5%85%B3%E4%BA%8E%E6%95%B0%E6%8D%AE%E7%9B%AE%E5%BD%95-ssd-%E5%92%8C-hdd-%E7%9A%84%E9%85%8D%E7%BD%AE%E5%BB%BA%E8%A1%A8%E6%9C%89%E6%97%B6%E5%80%99%E4%BC%9A%E9%81%87%E5%88%B0%E6%8A%A5%E9%94%99failed-to-find-enough-host-with-storage-medium-and-tag
-
-增加FE节点
-ALTER SYSTEM ADD FOLLOWER "follower_host:edit_log_port"
-
-删除FE节点
-ALTER SYSTEM DROP FOLLOWER "follower_host:edit_log_port"
-
-增加BE节点
-ALTER SYSTEM ADD BACKEND "host:heartbeat_port"[,"host:heartbeat_port"...];
-
-删除BE节点
-ALTER SYSTEM DECOMMISSION BACKEND "host:heartbeat_port"[,"host:heartbeat_port"...];
-
-
-
-
-show trash
-
-admin clean trash
-
-
-02  节点故障处理
-对于 FE 节点故障，如果无法快速定位故障原因，一般需要保留线程快照和内存快照后重启进程。可以通过如下命令保存FE的线程快照：
-jstack 进程ID >> 快照文件名.jstack
-通过以下命令保存 FE 的内存快照：
-jmap -dump:live,format=b,file=快照文件名.heap 进程ID
-在版本升级或一些意外场景下，FE 节点的 image 可能出现元数据异常，并且可能出现异常的元数据被同步到其它 FE 的情况，导致所有 FE 不可工作。一旦发现 image 出现故障，最快的恢复方案是使用 Recovery 模式停止 FE 选举，并使用备份的 image 替换故障的 image。当然，时刻备份 image 并不是容易的事情，鉴于该故障常见于集群升级，我们建议在集群升级的程序中，增加简单的本地 image 备份逻辑，保证每次升级拉起 FE 进程前会保留一份当前最新的 image 数据。
-对于 BE 节点故障，如果是进程崩溃，会产生 core 文件，且 minos 会自动拉取进程；如果是任务卡住，则需要通过以下命令保留线程快照后重启进程：
-pstack 进程ID >> 快照文件名.pstack

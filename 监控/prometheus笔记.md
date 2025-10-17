@@ -31,6 +31,95 @@
    curl -X PUT 'http://127.0.0.1:9090/api/v1/admin/tsdb/clean_tombstones'
    ```
 ---
+### Prometheus 标签relabeling动作
+#### 规则
+----
+> relabeling 规则主要由以下的一些配置属性组成，但对于每种类型的操作，只使用这些字段的一个子集：
+- action: 执行relabeling动作，可选值包括:replace、keep、drop、hashmod、labelmap、labeldrop或者labelkeep，默认值为replace。（不同的动作，使用下面的某一部分属性，如果没有配置，那么默认是replace）
+- separator: 分隔符，一个字符串，用于在连接源标签 source_labels 时分隔它们，默认为 :
+- source_labels: 源标签，使用配置的分隔符串联的标签名称列表，并与提供的正则表达式进行匹配。（要利用源标签钟指定的这些标签去做某一种动作）
+- regex: 正则表达式，用于匹配串联的源标签，默认为(.*)，匹配任何源标签
+- modules: 模数，串联的源标签哈希值的模，主要用于Prometheus水平分片
+- replacement: replacement字符串，写在目标标签上，用于替换relabeling动作，它可以参考由regex捕获的正则表达式捕获组
+#### action: replace 设置或替换标签值
+---
+> Relabeling 的一个常见操作就是设置（生成新的标签）或者覆盖（覆盖旧的标签）一个标签的，我们可以通过 replace 这个操作来完成，如果没有指定action 字段，则默认就是replace
+
+> 一个 replace动作的规则配置方式如下所示
+  ```bash
+  action: replace
+  source_labels: [<source label name list>]    # 要替换的源标签列表
+  separator: <source labels separator>         # 默认为 ";" 多个标签, 要将标签连接起来有什么操作符
+  regex: <regular expression>                  # 默认为 "(.*)" (匹配任何值))
+  replacement: <replacement string>            # 默认为 "$1" (使用第一个捕获组作为 replacement 作为值)
+  target_label: <target label>
+  ```
+> 该操作按顺序执行以下步骤
+- 使用提供的 separator 分隔符将 source_labels 中的标签列表值连接起来
+- 测试 regex 中的正则表达式是否与上一步连接的字符串匹配，如果不匹配，就跳到下一个 relabeling 规则，不替换任何东西
+- 如果正则匹配，就提取正则表达式捕获组中的值，并将 replacement 字符串中对这些组的引用($1, $2, ...)用它们的值替换
+- 把经过正则表达式替换的 replacement 字符串作为（$1, $2, ···） target_label 标签的新值存储起来
+---
+> 下面我们来简单看一看replace操作的示例。
+1. 其实很简单，就是原标签是什么（标签源头）
+2. 中间通过正则截取，截取之后拼接为新的值（中间处理与转换）
+3. 最后得到一个新的标签或者重写标签，值也可以是新的值或者旧的值
+
+> 设置一个固定的标签值，最简单的 replace 例子就是将一个标签设置为一个固定的值，比如你可以把 env 标签设置为 production，这里我们并没有设置规则的大部分属性，这是因为大部分的默认值已经可以满足这里的需求了，这里会将替换的字符串 production 作为 target_label 标签 env 的新值存储起来，也就是将 env 标签的值设置为 production。
+```bash
+action: replace
+replacement: production
+target_label: env
+```
+> 替换抓取任务端口
+  - 另一个稍微复杂的示例是重写一个被抓取任务实例的端口，我们可以用一个固定的 80 端口来替换 __address__ 标签的端口
+    1. 这里我们替换的源标签为 __address__
+    2. 然后通过正则表达式 ([^:]+)(?::\d+)? 进行匹配，这里有两个捕获组，第一个匹配的是 host($1)，第二个匹配的是端口($2)，所以在 replacement 字符串中我们保留第一个捕获组 $1
+    3. 然后将端口更改为 80，这样就可以将 __address__ 的实例端口更改为 80 端口
+    4. 最后重新写回 __address__ 这个目标标签
+    ```bash
+    action: replace
+    source_labels: [__address__]
+    regex: ([^:]+)(?::\d+)? # 第一个捕获组匹配的是 host，第二个匹配的是 port 端口。
+    replacement: "$1:80"
+    target_label: __address__
+    ```
+
+> 总结三种写法: 下面三种常用的写法替换标签值,根据实际灵活使用
+1. 直接替换源标签的值
+```bash
+- target_label: __address__
+  replacement: "monitor.example.com:9115" # 修改指向实际的Blackbox exporter
+```
+
+
+2. 源标签生成新的标签
+```bash
+- source_labels: [__param_target]
+  target_label: instance
+```
+
+3. 正则表达式来更改并且生成源标签的值
+```bash
+- action: replace</p>
+  source_labels: [__address__]
+  regex: ([^:]+)(?::\d+)? # 第一个捕获组匹配的是 host, 第二个匹配的是 port 端口。
+  replacement: "$1:80"
+  target_label: __address__
+```
+4. 取源标签的值, 并且生成新的标签, 最后赋值给新的标签
+```bash
+- source_labels: [__param_target]
+  regex: (.*//(.+))
+  replacement: $2
+  target_label: instance     产生的新的标签, 标签值为正则匹配结果
+```
+> 标签的作用
+- 可以基于已有的标签, 生成一个新标签
+- 也可以创建新的标签
+- 还可以过滤标签, 不想采集哪些, 或者想采集哪些
+- 哪些标签不要了也可以将其删除
+---
 ### prometheus 数据类型
 - histogram
   1. histogram是柱状图，在Prometheus系统中的查询语言中，有三种作用：
