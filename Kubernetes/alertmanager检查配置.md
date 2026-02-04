@@ -36,13 +36,12 @@
     routes:
     - receiver: "ops-receiver"
       group_wait: 10s
-      matchers:
-      - severity="critical"
-      - service="OpenLDAP"
+      match:
+        severity: "critical"
+        service: "OpenLDAP"
       active_time_intervals:
       - offhours
       - holidays
-
   receivers:
   - name: default-receiver
     email_configs:

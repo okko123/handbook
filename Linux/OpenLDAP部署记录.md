@@ -79,6 +79,11 @@
   1. 添加syncprov、ppolicy模块
      ```bash
      cat > module.ldif <<EOF
+     dn: cn=module{0},cn=config
+     changetype: modify
+     add: olcModuleLoad
+     olcModuleLoad: syncprov
+
      dn:cn=module{0},cn=config
      changetype: modify
      add: olcModuleLoad
@@ -87,7 +92,7 @@
      dn: cn=module{0},cn=config
      changetype: modify
      add: olcModuleLoad
-     olcModuleLoad: syncprov
+     olcModuleLoad: back_monitor
      EOF
      ldapadd -Y EXTERNAL -H ldapi:/// -f module.ldif
 
