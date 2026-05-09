@@ -5,10 +5,8 @@
    1. 配置静态IP、DNS
       ```bash
       # 在 Debian 13 中，dns-nameservers 配置不生效通常是因为系统默认使用了 systemd-resolved 或者没有安装 resolvconf 软件包。
-
       # 在现代 Debian 版本中，/etc/network/interfaces 里的 dns-* 参数并不会直接修改 /etc/resolv.conf，除非系统中有“中间人”插件来负责传递这些参数。
-
-      # 如果你希望 /etc/network/interfaces 中的 dns-nameservers 行生效，你需要安装 resolvconf。它是连接网络配置和 DNS 配置的桥梁。
+      # /etc/network/interfaces 中的 dns-nameservers 行生效，需要安装 resolvconf。它是连接网络配置和 DNS 配置的桥梁。
       apt install -y resolvconf
       systemctl restart resolvconf
 

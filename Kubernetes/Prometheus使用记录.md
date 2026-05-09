@@ -137,7 +137,7 @@ sum(kafka_consumergroup_lag{consumergroup !~ "anonymous.*"}) by (consumergroup, 
 ### 添加新的告警规则
 - 添加node节点load5 每核心负载高于2持续2分钟的告警规则
   ```bash
-  kubectl edit prometheusrule -n monitoring node-exporter-rules
+  etheusrule -n monitoring node-exporter-rules
 
   - alert: NodeLoadOver
     expr: |

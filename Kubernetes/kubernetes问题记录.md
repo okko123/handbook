@@ -104,9 +104,28 @@ whenUnsatisfiable 指示如果 Pod 不满足分布约束时如何处理：
   - container_memory_working_set_bytes = container_memory_usage_bytes – total_inactive_file（未激活的匿名缓存页）
   - container_memory_working_set_bytes 是容器真实使用的内存量，也是 limit限制时的 oom 判断依据。
   - cadvisor 中的 container_memory_usage_bytes 对应 cgroup 中的 memory.usage_in_bytes 文件，但 container_memory_working_set_bytes 并没有具体的文件，他的计算逻辑在 cadvisor 的代码中
----
 - [参考连接](https://imroc.io/posts/kubernetes/capture-packets-in-container/)
-
+---
+### 添加master节点
+1. 在master上生成新的token，这一步跟node节点加入相同
+   ```bash
+   kubeadm token create --print-join-command
+   kubeadm join 127.0.0.1:8443 --token izskvs.zusj16444vhnc725 --discovery-token-ca-cert-hash sha256:263be26e9eeb814bfb33eeb75595a199624860913c8285270395fa9a938d2948
+   ```
+2. 在master节点上传证书；执行完会在kube-system名称空间下创建名为kubeadm-certs的Secret，里面包含master节点需要用到的证书公钥和私钥。
+   ```bash
+   kubeadm init phase upload-certs --upload-certs
+   [upload-certs] Storing the certificates in Secret "kubeadm-certs" in the "kube-system" Namespace
+   [upload-certs] Using certificate key:
+   d82a6f600fe57cb4f7dc703e674e3f6458b67f5b7480a7fb8a4f83daab96182f
+   ```
+3. 在新的master节点上执行加入命令；跟node节点相比就多了--control-plane为控制平台，需要带上certificate key
+   ```bash
+   kubeadm join 127.0.0.1:8443 --token izskvs.zusj16444vhnc725 \
+     --discovery-token-ca-cert-hash sha256:263be26e9eeb814bfb33eeb75595a199624860913c8285270395fa9a938d2948 \
+     --control-plane --certificate-key d82a6f600fe57cb4f7dc703e674e3f6458b67f5b7480a7fb8a4f83daab96182f
+   ```
+---
 ### k8s用户
 - system:serviceaccounts代表serviceaccounts用户组
 - system:unauthenticated代表匿名用户组
@@ -117,3 +136,34 @@ whenUnsatisfiable 指示如果 Pod 不满足分布约束时如何处理：
 system:serviceaccount: （单数）是用于服务账户用户名的前缀；
 system:serviceaccounts: （复数）是用于服务账户组名的前缀。
 - [使用 RBAC 鉴权](https://kubernetes.io/zh/docs/reference/access-authn-authz/rbac/)
+
+
+
+链接：https://www.zhihu.com/question/526869937/answer/2011558095755696079
+
+---
+### 故障案例
+- 场景四：DNS 解析时有时无，nslookup 正常但 curl 失败？这个问题特别诡异。你在 Pod 里执行 nslookup kubernetes.default，返回 IP 正常；但 curl http://my-service 却超时。很多人以为是 CoreDNS 崩了，其实更可能是 DNS 缓存 + ndots 陷阱。K8s 默认给 Pod 的 /etc/resolv.conf 加了 ndots:5，意思是：如果域名中点少于 5 个，就先尝试拼接 search domain（比如 my-service.namespace.svc.cluster.local）。但如果 search domain 太多，或者网络延迟高，就会导致 DNS 查询超时重试，最终失败。
+   ```bash
+   # 验证方法：# 进入 Pod
+   kubectl exec -it your-pod -- sh
+   ​
+   # 查看 resolv.conf
+   cat /etc/resolv.conf
+   ​
+   # 手动测试带完整域名的解析（绕过 ndots）
+   nslookup my-service.namespace.svc.cluster.local
+   ​
+   # 对比短域名
+   nslookup my-service如果短域名慢或失败，长域名正常，基本就是 ndots 问题。解决方案：应用层改用 FQDN（完整域名）：比如代码里写 http://my-service.namespace.svc.cluster.local:8080；调整 Pod 的 dnsConfig：
+   spec:
+     dnsConfig:
+       options:
+         - name: ndots
+           value: "1"
+         - name: timeout
+           value: "2"
+           # 升级 CoreDNS 到最新版，并开启缓存插件（cache 30）；
+           # 监控 CoreDNS 的 latency 和 error rate，用 Prometheus + Grafana 做告警。
+           # 冷知识：K8s 1.27+ 已支持 dnsPolicy: ClusterFirstWithHostNet，对 hostNetwork Pod 更友好。
+   ```

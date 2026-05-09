@@ -240,6 +240,37 @@ COLUMNS(callStack, dt=now(3),source,project=split_part(source,'/', 8))
    ALTER SYSTEM DECOMMISSION BACKEND "host:heartbeat_port"[,"host:heartbeat_port"...];
 
 
+
+DECOMMISSION 命令说明：
+
+该命令用于安全删除 BE 节点。命令下发后，Doris 会尝试将该 BE 上的数据向其他 BE 节点迁移，当所有数据都迁移完成后，Doris 会自动删除该节点。
+
+该命令是一个异步操作。执行后，可以通过 SHOW PROC ‘/backends’; 看到该 BE 节点的 SystemDecommissioned 状态为 true。表示该节点正在进行下线。
+
+该命令不一定执行成功。比如剩余 BE 存储空间不足以容纳下线 BE 上的数据，或者剩余机器数量不满足最小副本数时，该命令都无法完成，并且 BE 会一直处于 SystemDecommissioned 为 true 的状态。
+
+DECOMMISSION 的进度，可以通过 SHOW PROC ‘/backends’; 中的 TabletNum 查看，如果正在进行，TabletNum 将不断减少。
+
+该操作可以通过:
+
+CANCEL DECOMMISSION BACKEND "be_host:be_heartbeat_service_port";
+
+命令取消。取消后，该 BE 上的数据将维持当前剩余的数据量。后续 Doris 重新进行负载均衡
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
    # 节点故障处理
    1. 对于 FE 节点故障，如果无法快速定位故障原因，一般需要保留线程快照和内存快照后重启进程。可以通过如下命令保存FE的线程快照：
      1. jstack 进程ID >> 快照文件名.jstack

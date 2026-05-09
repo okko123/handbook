@@ -77,13 +77,23 @@ target_label: env
     2. 然后通过正则表达式 ([^:]+)(?::\d+)? 进行匹配，这里有两个捕获组，第一个匹配的是 host($1)，第二个匹配的是端口($2)，所以在 replacement 字符串中我们保留第一个捕获组 $1
     3. 然后将端口更改为 80，这样就可以将 __address__ 的实例端口更改为 80 端口
     4. 最后重新写回 __address__ 这个目标标签
-    ```bash
-    action: replace
-    source_labels: [__address__]
-    regex: ([^:]+)(?::\d+)? # 第一个捕获组匹配的是 host，第二个匹配的是 port 端口。
-    replacement: "$1:80"
-    target_label: __address__
-    ```
+       ```bash
+       action: replace
+       source_labels: [__address__]
+       regex: ([^:]+)(?::\d+)? # 第一个捕获组匹配的是 host，第二个匹配的是 port 端口。
+       replacement: "$1:80"
+       target_label: __address__
+       ```
+> 替换node-exporter的标签信息由hostname改为主机IP
+  ```bash
+  kubectl edit servicemonitor -n monitoring node-exporter
+  # 修改一下内容
+  sourceLabels:
+  - __meta_kubernetes_pod_node_name
+
+  sourceLabels:
+  - __meta_kubernetes_pod_host_ip
+  ```
 
 > 总结三种写法: 下面三种常用的写法替换标签值,根据实际灵活使用
 1. 直接替换源标签的值
