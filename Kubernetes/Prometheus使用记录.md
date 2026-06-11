@@ -162,6 +162,25 @@ sum(kafka_consumergroup_lag{consumergroup !~ "anonymous.*"}) by (consumergroup, 
   monitoring   prometheus-adapter    app.kubernetes.io/component=metrics-adapter,app.kubernetes.io/name=prometheus-adapter,app.kubernetes.io/part-of=kube-prometheus                          52m
   monitoring   prometheus-k8s        app.kubernetes.io/component=prometheus,app.kubernetes.io/instance=k8s,app.kubernetes.io/name=prometheus,app.kubernetes.io/part-of=kube-prometheus        52m
   monitoring   prometheus-operator   app.kubernetes.io/component=controller,app.kubernetes.io/name=prometheus-operator,app.kubernetes.io/part-of=kube-prometheus                              52m
+
+  # 修改内容，添加ingress，from ipBlock cidr
+  spec:
+  egress:
+  - {}
+  ingress:
+  - from:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: prometheus
+    ports:
+    - port: 9090
+      protocol: TCP
+    - port: 8080
+      protocol: TCP
+
   ```
   ---
   - [网络策略](https://kubernetes.io/zh-cn/docs/concepts/services-networking/network-policies/)

@@ -41,13 +41,20 @@ apt install -y containerd
 mkdir -p /etc/containerd /etc/containerd/certs.d/docker.io/
 containerd config default | tee /etc/containerd/config.toml
 cat > /etc/containerd/certs.d/docker.io/hosts.toml <<EOF
+server = "https://registry-1.docker.io"
+
 [host."https://docker.1ms.run"]
   capabilities = ["pull", "resolve"]
   skip_verify = true
 EOF
 
 # 修改配置
+## containerd 2.2 版本配置
+sed -i "s|      config_path = '/etc/containerd/certs.d:/etc/docker/certs.d'|      config_path = '/etc/containerd/certs.d'|g" /etc/containerd/config.toml
+
+## 其他旧版本配置
 sed -i 's|      config_path = ""|      config_path = "/etc/containerd/certs.d"|g' /etc/containerd/config.toml
+
 sed -i "s#k8s.gcr.io#registry.cn-hangzhou.aliyuncs.com/google_containers#g"  /etc/containerd/config.toml
 sed -i "s#registry.k8s.io#registry.cn-hangzhou.aliyuncs.com/google_containers#g"  /etc/containerd/config.toml
 sed -i 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.toml

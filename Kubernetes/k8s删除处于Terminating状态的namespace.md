@@ -139,6 +139,37 @@ monitoring        Terminating   61m
     kubectl delete apiservice v1beta1.metrics.k8s.io
     ```
 ---
+
+> 在 Kubernetes 中，像 Rancher 这样的集群管理工具会注册一个全局的 准入 Webhook（Admission Webhook）。它的逻辑是：每当你对集群里的 Namespace 进行增删改查时，K8s 核心 API 都会先强制把请求发给 rancher-webhook 这个服务（Service）进行安全校验，校验通过了才允许执行。
+- 现在的核心矛盾是：
+  - 你尝试删除（或修改）Namespace。
+  - K8s 按照规则去寻找名为 rancher-webhook 的 Service。
+  - 结果这个 Service 已经不存在了（not found） 或者所在的整个 cattle-system 命名空间都被删掉了。
+  - 由于校验通道断了，K8s 为了安全起见，选择 “一刀切”拒绝所有针对 Namespace 的操作，导致你的 patch 或 delete 命令全部报 InternalError 被弹回。
+
+- 解决方案：打碎拦截器（临时解死锁）
+  - 既然这个 Webhook 服务已经没有了，我们就需要直接把 K8s 里的这个“过期的拦截规则”删掉，解除它对集群 Namespace 操作的封锁。
+  - 请直接在终端执行以下命令：
+    1. 第一步：强制删除卡死的 Namespace Webhook 验证规则
+       ```bash
+       # 1. 列出并确认 Rancher 相关的 webhook 配置
+       kubectl get validatingwebhookconfigurations | grep rancher
+       kubectl get mutatingwebhookconfigurations | grep rancher
+
+       # 2. 如果确认这些配置可以被删除，执行删除操作
+       kubectl delete validatingwebhookconfigurations <name1> <name2>
+       kubectl delete mutatingwebhookconfigurations <name1> <name2>
+       ```
+    2. 第二步：如果还报类似的错误，可以直接清理掉整个 Rancher 残留的 Webhook 配置：
+       ```bash
+       kubectl delete validatingwebhookconfigurations.admissionregistration.k8s.io rancher.cattle.io
+       kubectl delete validatingwebhookconfigurations.admissionregistration.k8s.io rancher.cattle.io.namespaces
+       ```
+    3. 第三步：重新执行清理命令；把这个拦路虎删掉之后，K8s 核心 API 就不再尝试去连接那个不存在的 rancher-webhook 服务了。现在你可以重新执行刚刚的 patch 命令，Namespace 就会瞬间被抹去：
+       ```bash
+       kubectl patch ns cattle-impersonation-system -p '{"metadata":{"finalizers":null}}' --type=merge
+       ```
+---
 ## 参考连接
 - [k8s中删除处于Terminating状态的namespace](https://zhuanlan.zhihu.com/p/267924292?utm_source=wechat_session)
 - [k8s ns 一直terminating，无法删除](https://blog.csdn.net/weixin_40161254/article/details/112267509)

@@ -167,3 +167,32 @@ system:serviceaccounts: （复数）是用于服务账户组名的前缀。
            # 监控 CoreDNS 的 latency 和 error rate，用 Prometheus + Grafana 做告警。
            # 冷知识：K8s 1.27+ 已支持 dnsPolicy: ClusterFirstWithHostNet，对 hostNetwork Pod 更友好。
    ```
+  ---
+  ### KubeDaemonSetMisScheduled
+  - 告警报错KubeDaemonSetMisScheduled。https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubedaemonsetmisscheduled
+  - 检查daemonset
+    ```bash
+    # kubectl -n $NAMESPACE describe daemonset $NAME
+    kubectl -n filebeat describe daemonset filebeat
+
+    Name:           filebeat
+    Selector:       k8s-app=filebeat
+    Node-Selector:  <none>
+    Labels:         k8s-app=filebeat
+    Annotations:    deprecated.daemonset.template.generation: 1
+    Desired Number of Nodes Scheduled: 6
+    Current Number of Nodes Scheduled: 6
+    Number of Nodes Scheduled with Up-to-date Pods: 6
+    Number of Nodes Scheduled with Available Pods: 6
+    Number of Nodes Misscheduled: 1
+    ```
+  - 看到 Number of Nodes Misscheduled: 1 报错，这意味着：有 1 个原本“不应该”运行该 DaemonSet 的节点，由于某种原因正在运行它，或者其上的 Pod 处于残留状态。
+  - 处理过程
+    ```bash
+    # 快速定位是哪个节点“被错误调度”了
+    # 查看该 DaemonSet 下所有 Pod 的状态、节点分布和标签
+    kubectl get pods -n <你的命名空间> -l <DaemonSet的label选择器> -o wide
+
+    # 删除pod
+    kubectl delete pod <那个错误的Pod名称> -n <命名空间>
+    ```

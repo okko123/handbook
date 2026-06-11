@@ -25,6 +25,8 @@
        app.kubernetes.io/instance: traefik
        app.kubernetes.io/name: traefik
    EOF
+
+   kubectl apply -f traefik-metrics.yaml
    ```
 3. 修改clusterrole
    ```bash
