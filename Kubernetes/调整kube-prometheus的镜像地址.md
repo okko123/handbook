@@ -23,3 +23,12 @@ kubectl edit -n monitoring alertmanager
 ```bash
 kubectl edit daemonset -n monitoring node-exporter 
 ```
+im
+  remoteWrite:
+  - url: http://10.111.212.1:8428/api/v1/write
+    writeRelabelConfigs:
+    - action: labeldrop
+      regex: prometheus_replica
+  externalLabels:
+    cluster: gray02-hangzhou
+    component: k8s

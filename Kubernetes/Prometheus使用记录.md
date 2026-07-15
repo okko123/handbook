@@ -164,6 +164,8 @@ sum(kafka_consumergroup_lag{consumergroup !~ "anonymous.*"}) by (consumergroup, 
   monitoring   prometheus-operator   app.kubernetes.io/component=controller,app.kubernetes.io/name=prometheus-operator,app.kubernetes.io/part-of=kube-prometheus                              52m
 
   # 修改内容，添加ingress，from ipBlock cidr
+  ## kubectl edit networkpolicy -n monitoring prometheus-k8s
+  
   spec:
   egress:
   - {}

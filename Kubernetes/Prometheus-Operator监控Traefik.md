@@ -38,12 +38,14 @@
      name: prometheus-k8s
    rules:
    - apiGroups:
+     - discovery.k8s.io
      - ""
      resources:
      - nodes/metrics
      - endpoints
      - pods
      - services
+     - endpointslices
      verbs:
      - get
      - list
@@ -56,7 +58,7 @@
 
    kubectl apply -f prometheus-k8s.yaml
    ```
-4. 添加servicemonitor
+4. 添加servicemonitor，注意port的名称必须与service里面的名称一致，否则抓取不到目标
    ```bash
    cat > traefik-monitor.yaml<<EOF
    apiVersion: monitoring.coreos.com/v1
