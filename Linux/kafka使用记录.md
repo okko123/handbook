@@ -1,4 +1,23 @@
-#kafka 使用记录
+# kafka 使用记录
+### kafak 4.3.1部署记录
+```bash
+wget https://dlcdn.apache.org/kafka/4.3.1/kafka_2.13-4.3.1.tgz
+tar xf kafka_2.13-4.3.1.tgz
+cd kafka_2.13-4.3.1
+
+mkdir -p /tmp/kraft-combined-logs
+pushd /tmp/kraft-combined-logs
+
+# 生成UUID
+/home/nuc/kafka_2.13-4.3.1/bin/kafka-storage.sh random-uuid
+6rKk-0sTQ0iLO83KbXzj0A
+
+# 对数据目录进行初始化
+/home/nuc/kafka_2.13-4.3.1/bin/kafka-storage.sh format -t 6rKk-0sTQ0iLO83KbXzj0A -c /home/nuc/kafka_2.13-4.3.1/config/server.properties --standalone
+
+# 启动
+/home/nuc/kafka_2.13-4.3.1/bin/kafka-server-start.sh -daemon  /home/nuc/kafka_2.13-4.3.1/config/server.properties
+```
 ### kafka集群部署
 1. 修改server.properties文件
    - 每个kafka实例设置不同的broker.id

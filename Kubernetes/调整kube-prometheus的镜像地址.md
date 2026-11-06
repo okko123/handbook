@@ -23,7 +23,10 @@ kubectl edit -n monitoring alertmanager
 ```bash
 kubectl edit daemonset -n monitoring node-exporter 
 ```
-im
+4. 修改Prometheus的远程写入
+```bash
+kubectl edit -n monitoring prometheus k8s
+
   remoteWrite:
   - url: http://10.111.212.1:8428/api/v1/write
     writeRelabelConfigs:
@@ -32,3 +35,4 @@ im
   externalLabels:
     cluster: gray02-hangzhou
     component: k8s
+```

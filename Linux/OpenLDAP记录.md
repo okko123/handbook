@@ -41,11 +41,11 @@
 2. 两者的配置内容有区别吗？
    > 虽然它们都叫 olcOverlay=syncprov，但它们定义的“作用域”不同：
 
-|特性|在 {0}config下|在 {1}mdb 下|
-|---|---|---|
-|同步什么|所有的配置项、权限、Schema|所有的用户、组、组织单位|
-|对应的 Consumer (从端)|从服务器的 olcDatabase={0}config|从服务器的 olcDatabase={1}mdb|
-|典型指令|olcSpCheckpoint (针对配置库)|olcSpCheckpoint, olcSpSessionLog (针对大数据量)|
+    |特性|在 {0}config下|在 {1}mdb 下|
+    |---|---|---|
+    |同步什么|所有的配置项、权限、Schema|所有的用户、组、组织单位|
+    |对应的 Consumer (从端)|从服务器的 olcDatabase={0}config|从服务器的 olcDatabase={1}mdb|
+    |典型指令|olcSpCheckpoint (针对配置库)|olcSpCheckpoint, olcSpSessionLog (针对大数据量)|
 3. 它们之间的逻辑关系
    > 如果你只在 {1}mdb 下配置了同步，而没有在 {0}config 下配置：
      1. 你在主节点手动添加一个用户，从节点会同步这个用户。
@@ -114,7 +114,6 @@
      sudo ldapsearch -Q -LLL -Y EXTERNAL -H ldapi:/// -b "olcDatabase={1}mdb,cn=config"
      ```
 ---
-
 ### ldapmodify、ldapadd工具-用于导入ldif配置
 > 导入配置
   ```bash
@@ -134,6 +133,11 @@
   # 获取用户的全部属性
   ldapsearch -x -LLL -H ldap:/// -b uid=john,ou=people,dc=example,dc=com
 
+  # pwdHistory、pwdChangedTime、pwdAccountLockedTime 等属于 OpenLDAP PPolicy（Password Policy）模块自动管理的内部操作属性，而不是常规的结构属性（如 uid、cn、mail）。
+  # LDAP 规范规定：默认的 ldapsearch 只会返回常规属性。操作属性必须在命令行末尾显式指定，或者使用加号 + 才能被检索出来。
+  # "*" 表示返回所有普通属性，"+" 表示返回所有操作属性。
+  ldapsearch -x -LLL -H ldap:/// -b uid=john,ou=people,dc=example,dc=com "*" "+"
+
   # 指定过滤条件：按照dn:cn=admin,dc=example,dc=org进行过滤
   ldapsearch -x -H ldap://192.168.0.1:389 -b cn=admin,dc=example,dc=com -D "cn=admin,dc=example,dc=com" -w admin
 
@@ -151,6 +155,27 @@
 ```bash
 ldapwhoami -H ldap:// -x -ZZ
 ```
+---
+### 命令参数对比
+||||
+|---|---|---|
+|命令项|ldapsearch -Q -LLL -Y EXTERNAL -H ldapi:///|ldapsearch -x -LLL -H ldap:///| 
+|连接协议 (-H)| ldapi:/// (Unix Domain Socket)| ldap:/// (TCP/IP 网络协议)| 
+|认证方式| -Y EXTERNAL (利用操作系统当前用户身份)|-x (简单认证 Simple Authentication)|
+|静默模式 (-Q)|-Q (Quiet，隐蔽 SASL 认证交互过程)|(未设置)|
+|输出格式 (-LLL)|-LLL (纯文本 LDIF，去除注释与版本头)|-LLL (纯文本 LDIF，去除注释与版本头)|
+|默认权限结果|只要在服务器用 root 运行，直接获取最高管理员权限 (manage)|如果未提供 -D 和 -w，属于匿名访问 (Anonymous)，权限极低|
+
+
+### ldap:// 与 ldapi:// 的本质区别
+1. ldap:// (LDAP over TCP/IP)
+   - 通信媒介：标准的 TCP/IP 网络套接字（默认端口 389，加密的 LDAPS 为 636）。
+   - 适用场景：跨网络/远程客户端连接 LDAP 服务器（如 Jenkins、GitLab、Python 应用，或从另一台服务器远程查询）。
+   - 安全性：流量走网络栈，默认是明文传输（除非开启 TLS/SSL）；认证必须明确提供账号密码或凭据。
+2. ldapi:// (LDAP over IPC / Unix Domain Socket)
+   - 通信媒介：Linux/Unix 系统的 进程间通信 (IPC) 本地 Unix 域套接字（通常对应文件系统中的 /var/run/slapd/ldapi 或 /var/run/openldap/slapd.args）。
+   - 适用场景：仅限 LDAP 服务器本机上的运维与管理操作。
+   - 安全性与特权：由于数据传输不经过网络栈，仅在内核内存中传递，安全性极高。更重要的是，它支持通过系统的 UID/GID 校验身份（即 EXTERNAL 机制）。
 ---
 ### slap开头的命令是服务端工具
 - 备份配置

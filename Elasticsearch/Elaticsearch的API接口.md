@@ -74,6 +74,23 @@ POST /_reindex?wait_for_completion=false
 
 #查看任务信息
 GET /_tasks/{taskID}可以看到重建进程，其中包含耗时，剩余doc数量等信息
+
+# 查询索引内容
+GET /index_name/_search
+
+# 查询索引内容，并显示10条
+GET /index_name/_search?size=10
+
+# 查询 datas 数组字段下内部对象 actualEnv 的值等于 "example" 的文档，并限制显示前 10 条，
+GET /index_name/_search
+{
+  "size": 10,
+  "query": {
+    "term": {
+      "datas.actualEnv": "example"
+    }
+  }
+}
 ```
 ## 模板
 ```json

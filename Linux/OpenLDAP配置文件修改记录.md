@@ -2,6 +2,8 @@
 - [使用ldif文件初始化OpenLDAP](#使用ldif文件初始化OpenLDAP)
 - [修改用户密码](#修改用户密码)
 - [使用LDIF配置主从](#使用LDIF配置主从)
+- [添加monitor模块](#添加monitor模块)
+- [使用 pwdPolicySubentry 属性为特定成员创建“豁免”策略](#使用-pwdpolicysubentry-属性为特定成员创建豁免策略)
 <!-- /TOC -->
 ### 使用ldif文件初始化OpenLDAP
 ---
@@ -568,7 +570,20 @@ cn=Time,cn=Monitor
 # 当前读/写等待者的数量。
 cn=Waiters,cn=Monitor
 ```
+### 使用 pwdPolicySubentry 属性为特定成员创建“豁免”策略
+```bash
+# 假设用户为 cn=readonly,ou=serviceaccounts,dc=example,dc=cn
+# ppolicy规则的dn为 cn=ppolicy,ou=policies,dc=example,dc=cn
 
+cat > policy.ldif <<EOF
+dn: cn=readonly,ou=serviceaccounts,dc=example,dc=cn
+changetype: modify
+add: pwdPolicySubentry
+pwdPolicySubentry: cn=ppolicy,ou=policies,dc=example,dc=cn
+EOF
+
+ldapadd -x -D'cn=admin,dc=example,dc=cn' -W -H ldapi:/// -f pwdpolicysubentry.ldif
+```
 ---
 ## 参考信息
 - [How To Change Account Passwords on an OpenLDAP Server](https://www.digitalocean.com/community/tutorials/how-to-change-account-passwords-on-an-openldap-server)
